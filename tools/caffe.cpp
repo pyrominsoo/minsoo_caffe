@@ -303,7 +303,7 @@ int test() {
   float loss = 0;
 
   // MINSOO Prepare Statis
-  statis_on = true;
+  statis_on = false;
   if (statis_on) {
       statis = new Statis<float>(0, FLAGS_iterations);
   }
