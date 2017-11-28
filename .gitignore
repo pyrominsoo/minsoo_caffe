@@ -102,3 +102,4 @@ MANIFEST-*
 *.log
 *.slog
 Logs/
+Result_alexnet/
