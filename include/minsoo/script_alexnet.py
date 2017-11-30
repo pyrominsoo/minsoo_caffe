@@ -10,12 +10,12 @@ def file_gen():
         intbits = 64 - i;
         f.write("cp ./include/minsoo/fracbit/fixed" + str(intbits) + "_" + str(fracbits) + ".hpp ./include/minsoo/fixed.hpp;\n")
         f.write("make;\n")
-        f.write("/home/minsoo/Caffe/models/bvlc_alexnet/test_alexnet.sh 2> Alex_log/fracbit/fixed" + str(intbits) + "_" + str(fracbits) + ".log\n")
+        f.write("/home/minsoo/Caffe/test_alexnet.sh 2> Alex_log/fracbit/fixed" + str(intbits) + "_" + str(fracbits) + ".log\n")
         
         intbits = i;
         fracbits = 64 - i;
         f.write("cp ./include/minsoo/intbit/fixed" + str(intbits) + "_" + str(fracbits) + ".hpp ./include/minsoo/fixed.hpp;\n")
         f.write("make;\n")
-        f.write("/home/minsoo/Caffe/models/bvlc_alexnet/test_alexnet.sh 2> Alex_log/intbit/fixed" + str(intbits) + "_" + str(fracbits) + ".log\n")
+        f.write("/home/minsoo/Caffe/test_alexnet.sh 2> Alex_log/intbit/fixed" + str(intbits) + "_" + str(fracbits) + ".log\n")
 
 file_gen()
