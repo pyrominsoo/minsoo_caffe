@@ -42,8 +42,18 @@ void minsoo_sgemm_mitchell(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE T
     const int M, const int N, const int K, 
     const float alpha, const float* A, const float* B, const float beta, float* C) {
 
-    fixed_f_t op_A[M][K];
-    fixed_f_t op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_f_t op_A[M][K];
+    // fixed_f_t op_B[K][N];
+    fixed_f_t** op_A = new fixed_f_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_f_t[K];
+    }
+    fixed_f_t** op_B = new fixed_f_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_f_t[N];
+    }
+    
     fixed_f_t temp;
     fixed_f_t accum;
 
@@ -128,6 +138,16 @@ void minsoo_sgemm_mitchell(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE T
         }
     }
 
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
 
     // If needed, close the file output
     if (gemm_report) {
@@ -140,8 +160,18 @@ void minsoo_dgemm_mitchell(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE T
     const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta, double* C) {
 
-    fixed_d_t op_A[M][K];
-    fixed_d_t op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_d_t op_A[M][K];
+    // fixed_d_t op_B[K][N];
+    fixed_d_t** op_A = new fixed_d_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_d_t[K];
+    }
+    fixed_d_t** op_B = new fixed_d_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_d_t[N];
+    }
+
     fixed_d_t temp;
     fixed_d_t accum;
 
@@ -206,6 +236,18 @@ void minsoo_dgemm_mitchell(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE T
             C[row*N+col] = temp.to_double();
         }
     }
+
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
+
 }
 
 
@@ -321,8 +363,18 @@ void minsoo_sgemm_logm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Trans
     const int M, const int N, const int K, 
     const float alpha, const float* A, const float* B, const float beta, float* C) {
 
-    fixed_f_t op_A[M][K];
-    fixed_f_t op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_f_t op_A[M][K];
+    // fixed_f_t op_B[K][N];
+    fixed_f_t** op_A = new fixed_f_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_f_t[K];
+    }
+    fixed_f_t** op_B = new fixed_f_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_f_t[N];
+    }
+    
     fixed_f_t temp;
     fixed_f_t accum;
 
@@ -407,6 +459,16 @@ void minsoo_sgemm_logm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Trans
         }
     }
 
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
 
     // If needed, close the file output
     if (gemm_report) {
@@ -419,8 +481,18 @@ void minsoo_dgemm_logm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Trans
     const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta, double* C) {
 
-    fixed_d_t op_A[M][K];
-    fixed_d_t op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_d_t op_A[M][K];
+    // fixed_d_t op_B[K][N];
+    fixed_d_t** op_A = new fixed_d_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_d_t[K];
+    }
+    fixed_d_t** op_B = new fixed_d_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_d_t[N];
+    }
+    
     fixed_d_t temp;
     fixed_d_t accum;
 
@@ -485,6 +557,18 @@ void minsoo_dgemm_logm(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Trans
             C[row*N+col] = temp.to_double();
         }
     }
+
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
+
 }
 
 
@@ -603,8 +687,18 @@ void minsoo_sgemm_fixed(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
     const int M, const int N, const int K, 
     const float alpha, const float* A, const float* B, const float beta, float* C) {
 
-    fixed_f_t op_A[M][K];
-    fixed_f_t op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_f_t op_A[M][K];
+    // fixed_f_t op_B[K][N];
+    fixed_f_t** op_A = new fixed_f_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_f_t[K];
+    }
+    fixed_f_t** op_B = new fixed_f_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_f_t[N];
+    }
+
     fixed_f_t temp;
     fixed_f_t accum;
 
@@ -689,6 +783,18 @@ void minsoo_sgemm_fixed(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
         }
     }
 
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
+
+
 
     // If needed, close the file output
     if (gemm_report) {
@@ -703,8 +809,18 @@ void minsoo_dgemm_fixed(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
     const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta, double* C) {
 
-    fixed_d_t op_A[M][K];
-    fixed_d_t op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_d_t op_A[M][K];
+    // fixed_d_t op_B[K][N];
+    fixed_d_t** op_A = new fixed_d_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_d_t[K];
+    }
+    fixed_d_t** op_B = new fixed_d_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_d_t[N];
+    }
+    
     fixed_d_t temp;
     fixed_d_t accum;
 
@@ -768,6 +884,18 @@ void minsoo_dgemm_fixed(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
             C[row*N+col] = temp.to_double();
         }
     }
+
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
+
 }
 
 
@@ -870,8 +998,18 @@ void minsoo_sgemm_float(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
     const int M, const int N, const int K, 
     const float alpha, const float* A, const float* B, const float beta, float* C) {
 
-    float op_A[M][K];
-    float op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // float op_A[M][K];
+    // float op_B[K][N];
+    float** op_A = new float*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new float[K];
+    }
+    float** op_B = new float*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new float[N];
+    }
+
     float accum;
 
     // Assumes RowMajor Order
@@ -929,6 +1067,16 @@ void minsoo_sgemm_float(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
         }
     }
 
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
 
 }
 
@@ -936,8 +1084,18 @@ void minsoo_dgemm_float(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
     const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta, double* C) {
 
-    double op_A[M][K];
-    double op_B[K][N];
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // double op_A[M][K];
+    // double op_B[K][N];
+    double** op_A = new double*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new double[K];
+    }
+    double** op_B = new double*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new double[N];
+    }
+
     double accum;
 
     // Assumes RowMajor Order
@@ -995,6 +1153,16 @@ void minsoo_dgemm_float(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
         }
     }
 
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
 
 }
 

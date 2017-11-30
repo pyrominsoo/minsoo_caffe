@@ -103,3 +103,6 @@ MANIFEST-*
 *.slog
 Logs/
 Result_alexnet/
+
+# Fixed point config
+include/minsoo/fixed.hpp
