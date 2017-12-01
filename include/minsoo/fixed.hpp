@@ -1,2 +1,2 @@
-#define INTBITS 10
-#define FRACBITS 22
+#define INTBITS 59
+#define FRACBITS 5
