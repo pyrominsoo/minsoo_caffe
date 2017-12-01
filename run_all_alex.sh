@@ -1,4 +1,5 @@
 export CAFFE_ROOT=$(pwd)
+rm -rf Alex_log
 mkdir Alex_log
 mkdir Alex_log/intbit
 mkdir Alex_log/fracbit

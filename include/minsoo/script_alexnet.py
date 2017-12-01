@@ -3,6 +3,7 @@ def file_gen():
     filename = "run_all_alex.sh"
     f = open(filename,'w')
     f.write("export CAFFE_ROOT=$(pwd)\n")
+    f.write("rm -rf Alex_log\n")
     f.write("mkdir Alex_log\n")
     f.write("mkdir Alex_log/intbit\n")
     f.write("mkdir Alex_log/fracbit\n")
