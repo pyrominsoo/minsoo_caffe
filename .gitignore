@@ -106,3 +106,4 @@ Result_alexnet/
 
 # Fixed point config
 include/minsoo/fixed.hpp
+run_all_alex.sh

@@ -1247,8 +1247,8 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
   // cblas_sgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
     // ldb, beta, C, N);
   // minsoo_sgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-  // minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-  minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+  minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+  // minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
   // minsoo_sgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
 }
 
@@ -1262,8 +1262,8 @@ void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
   // cblas_dgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
      // ldb, beta, C, N);
     // minsoo_dgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-    // minsoo_dgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-    minsoo_dgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+    minsoo_dgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+    // minsoo_dgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
     // minsoo_dgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
 }
 
@@ -1273,8 +1273,8 @@ void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const float beta, float* y) {
   // cblas_sgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
     // minsoo_sgemv_float(TransA, M, N, alpha, A, x, beta, y); 
-    // minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
-    minsoo_sgemv_logm(TransA, M, N, alpha, A, x, beta, y); 
+    minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
+    // minsoo_sgemv_logm(TransA, M, N, alpha, A, x, beta, y); 
     // minsoo_sgemv_mitchell(TransA, M, N, alpha, A, x, beta, y); 
 
 }
@@ -1285,8 +1285,8 @@ void caffe_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     const double beta, double* y) {
   // cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
     // minsoo_dgemv_float(TransA, M, N, alpha, A, x, beta, y);
-    // minsoo_dgemv_fixed(TransA, M, N, alpha, A, x, beta, y);
-    minsoo_dgemv_logm(TransA, M, N, alpha, A, x, beta, y);
+    minsoo_dgemv_fixed(TransA, M, N, alpha, A, x, beta, y);
+    // minsoo_dgemv_logm(TransA, M, N, alpha, A, x, beta, y);
     // minsoo_dgemv_mitchell(TransA, M, N, alpha, A, x, beta, y);
 }
 
