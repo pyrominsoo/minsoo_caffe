@@ -107,3 +107,5 @@ Result_alexnet/
 # Fixed point config
 include/minsoo/fixed.hpp
 run_all_alex.sh
+run_all_cifar.sh
+nohup.out
