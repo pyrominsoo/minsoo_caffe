@@ -259,7 +259,6 @@ void minsoo_sgemv_mitchell(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -277,7 +276,6 @@ void minsoo_sgemv_mitchell(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -575,7 +573,6 @@ void minsoo_sgemv_logm(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -593,7 +590,6 @@ void minsoo_sgemv_logm(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -895,7 +891,6 @@ void minsoo_sgemv_fixed(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum,temp)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -911,7 +906,6 @@ void minsoo_sgemv_fixed(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum,temp)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -1175,7 +1169,6 @@ void minsoo_sgemv_float(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -1185,7 +1178,6 @@ void minsoo_sgemv_float(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -1250,9 +1242,9 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
   // cblas_sgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
     // ldb, beta, C, N);
   // minsoo_sgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-  // minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+  minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
   // minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-  minsoo_sgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+  // minsoo_sgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
 }
 
 template<>
@@ -1268,9 +1260,9 @@ void caffe_cpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
   // cblas_dgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
      // ldb, beta, C, N);
     // minsoo_dgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-    // minsoo_dgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+    minsoo_dgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
     // minsoo_dgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-    minsoo_dgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+    // minsoo_dgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
 }
 
 template <>
@@ -1280,9 +1272,9 @@ void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     
   // cblas_sgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
     // minsoo_sgemv_float(TransA, M, N, alpha, A, x, beta, y); 
-    // minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
+    minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
     // minsoo_sgemv_logm(TransA, M, N, alpha, A, x, beta, y); 
-    minsoo_sgemv_mitchell(TransA, M, N, alpha, A, x, beta, y); 
+    // minsoo_sgemv_mitchell(TransA, M, N, alpha, A, x, beta, y); 
 
 }
 
@@ -1295,9 +1287,9 @@ void caffe_cpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     exit(EXIT_FAILURE);
   // cblas_dgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
     // minsoo_dgemv_float(TransA, M, N, alpha, A, x, beta, y);
-    // minsoo_dgemv_fixed(TransA, M, N, alpha, A, x, beta, y);
+    minsoo_dgemv_fixed(TransA, M, N, alpha, A, x, beta, y);
     // minsoo_dgemv_logm(TransA, M, N, alpha, A, x, beta, y);
-    minsoo_dgemv_mitchell(TransA, M, N, alpha, A, x, beta, y);
+    // minsoo_dgemv_mitchell(TransA, M, N, alpha, A, x, beta, y);
 }
 
 template <>

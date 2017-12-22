@@ -259,7 +259,6 @@ void minsoo_sgemv_mitchell(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -277,7 +276,6 @@ void minsoo_sgemv_mitchell(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -575,7 +573,6 @@ void minsoo_sgemv_logm(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -593,7 +590,6 @@ void minsoo_sgemv_logm(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum,temp,temp2)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -895,7 +891,6 @@ void minsoo_sgemv_fixed(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum,temp)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -911,7 +906,6 @@ void minsoo_sgemv_fixed(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum,temp)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
@@ -1175,7 +1169,6 @@ void minsoo_sgemv_float(const CBLAS_TRANSPOSE TransA,
 
     if (TransA == CblasTrans) {
         // Transpose case
-        #pragma omp parallel for default(shared) private(accum)
         for (int row = 0; row < N; row++) {
             accum = 0;
             for (int col = 0; col < M; col++) {
@@ -1185,7 +1178,6 @@ void minsoo_sgemv_float(const CBLAS_TRANSPOSE TransA,
         }
     } else if (TransA == CblasNoTrans) {
         // No transpose case
-        #pragma omp parallel for default(shared) private(accum)
         for (int row = 0; row < M; row++) {
             accum = 0;
             for (int col = 0; col < N; col++) {
