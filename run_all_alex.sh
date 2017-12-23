@@ -65,3 +65,9 @@ make;
 cp ./include/minsoo/intbit/fixed14_50.hpp ./include/minsoo/fixed.hpp;
 make;
 ./test_alexnet.sh 2> Alex_log/intbit/fixed14_50.log
+cp ./include/minsoo/fracbit/fixed49_15.hpp ./include/minsoo/fixed.hpp;
+make;
+./test_alexnet.sh 2> Alex_log/fracbit/fixed49_15.log
+cp ./include/minsoo/intbit/fixed15_49.hpp ./include/minsoo/fixed.hpp;
+make;
+./test_alexnet.sh 2> Alex_log/intbit/fixed15_49.log
