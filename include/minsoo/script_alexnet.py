@@ -8,7 +8,7 @@ def file_gen():
     f.write("mkdir Alex_log\n")
     f.write("mkdir Alex_log/intbit\n")
     f.write("mkdir Alex_log/fracbit\n")
-    for i in range(5,16):
+    for i in range(7,13):
         fracbits = i;
         intbits = 64 - i;
         f.write("cp ./include/minsoo/fracbit/fixed" + str(intbits) + "_" + str(fracbits) + ".hpp ./include/minsoo/fixed.hpp;\n")

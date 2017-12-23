@@ -5,18 +5,6 @@ rm -rf Alex_log
 mkdir Alex_log
 mkdir Alex_log/intbit
 mkdir Alex_log/fracbit
-cp ./include/minsoo/fracbit/fixed59_5.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed59_5.log
-cp ./include/minsoo/intbit/fixed5_59.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed5_59.log
-cp ./include/minsoo/fracbit/fixed58_6.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed58_6.log
-cp ./include/minsoo/intbit/fixed6_58.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed6_58.log
 cp ./include/minsoo/fracbit/fixed57_7.hpp ./include/minsoo/fixed.hpp;
 make;
 ./test_alexnet.sh 2> Alex_log/fracbit/fixed57_7.log
@@ -53,21 +41,3 @@ make;
 cp ./include/minsoo/intbit/fixed12_52.hpp ./include/minsoo/fixed.hpp;
 make;
 ./test_alexnet.sh 2> Alex_log/intbit/fixed12_52.log
-cp ./include/minsoo/fracbit/fixed51_13.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed51_13.log
-cp ./include/minsoo/intbit/fixed13_51.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed13_51.log
-cp ./include/minsoo/fracbit/fixed50_14.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed50_14.log
-cp ./include/minsoo/intbit/fixed14_50.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed14_50.log
-cp ./include/minsoo/fracbit/fixed49_15.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed49_15.log
-cp ./include/minsoo/intbit/fixed15_49.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed15_49.log
