@@ -16,6 +16,7 @@
 // The global variable to turn on value reporting
 bool gemm_report(false);
 bool log_report(false);
+extern bool mult_dump;
 
 namespace caffe {
 
@@ -110,7 +111,7 @@ void minsoo_sgemm_mitchell(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE T
 
 
     // Fill up C with alpha*op(A)*op(B) + beta*C
-    #pragma omp parallel for default(shared) collapse(2)
+    //#pragma omp parallel for default(shared) collapse(2)
     for (int row = 0; row < M; row++) {
         for (int col = 0; col < N; col++) {
             fixed_f_t accum = 0;
@@ -118,7 +119,14 @@ void minsoo_sgemm_mitchell(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE T
             for (int k_index = 0; k_index < K; k_index++) {
                 temp = op_A[row][k_index];
                 fixed_f_t op2 = op_B[k_index][col];
+                if (mult_dump) {
+                    fout << "A: " << temp.to_float() << std::endl;
+                    fout << "B: " << op2.to_float() << std::endl;
+                }
                 mitch_mult(&temp, &op2,64);
+                if (mult_dump) {
+                    fout << "Answer: " << temp.to_float() << std::endl;
+                }
                 //temp *= op_B[k_index][col];
                 accum += temp;
             }
@@ -750,13 +758,20 @@ void minsoo_sgemm_fixed(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE Tran
 
 
     // Fill up C with alpha*op(A)*op(B) + beta*C
-    #pragma omp parallel for collapse(2) default(shared) private(accum,temp)
+    //#pragma omp parallel for collapse(2) default(shared) private(accum,temp)
     for (int row = 0; row < M; row++) {
         for (int col = 0; col < N; col++) {
             accum = 0;
             for (int k_index = 0; k_index < K; k_index++) {
                 temp = op_A[row][k_index];
+                if (mult_dump) {
+                    fout << "A: " << temp.to_float() << std::endl;
+                    fout << "B: " << op_B[k_index][col].to_float() << std::endl;
+                }
                 temp *= op_B[k_index][col];
+                if (mult_dump) {
+                    fout << "Answer: " << temp.to_float() << std::endl;
+                }
                 accum += temp;
             }
             accum *= alpha;

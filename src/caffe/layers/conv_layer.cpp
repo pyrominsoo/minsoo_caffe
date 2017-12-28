@@ -8,6 +8,7 @@
 #include "minsoo/Statis.hpp"
 extern bool log_report;
 bool statis_on;
+bool mult_dump(false);
 Statis<float>* statis;
 Batch<float>* batch;
 int batch_size = 100;
@@ -41,8 +42,12 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
+      if (batch->reportID() == 0 && batch->returnInfer(n)->reportID() == 1 && n == 1) {
+        mult_dump = true; 
+      }
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
+      mult_dump = false;
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);

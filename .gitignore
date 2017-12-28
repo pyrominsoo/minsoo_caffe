@@ -107,3 +107,6 @@ Result_alexnet/
 # Fixed point config
 include/minsoo/fixed.hpp
 nohup.out
+
+# current mult indicator
+current_mult
