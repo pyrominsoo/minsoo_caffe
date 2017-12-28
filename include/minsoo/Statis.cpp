@@ -472,6 +472,11 @@ uint Infer<Dtype>::reportIPos(void) {
 }
 
 
+template <typename Dtype>
+int Infer<Dtype>::reportID(void) {
+    return this->id;
+}
+
 
 template <typename Dtype>
 void Infer<Dtype>::printAll(void) {
@@ -650,6 +655,10 @@ uint Batch<Dtype>::reportNumCorrect(void) {
     return num_correct;
 }
 
+template <typename Dtype>
+int Batch<Dtype>::reportID(void) {
+    return this->id;
+}
 
 template <typename Dtype>
 void Batch<Dtype>::printAll(void) {

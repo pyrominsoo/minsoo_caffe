@@ -77,6 +77,7 @@ class Infer {
         uint reportCPos(void);
         bool addIPLayer(IPLayer<Dtype>* ilayer);
         uint reportIPos(void);
+        int  reportID(void);
         void printAll(void);
         void fwriteAll(std::ofstream* file);
         void fwriteBare(std::ofstream* file);
@@ -106,6 +107,7 @@ class Batch {
         Infer<Dtype>* returnInfer(uint idx);
         uint reportPos(void);
         uint reportNumCorrect(void);
+        int  reportID(void);
         void printAll(void);
         void fwriteAll(std::ofstream* file);
         void fwriteBare(std::ofstream* file);
