@@ -1,3 +1,7 @@
+#ifndef LOG_MULT_HPP_
+#define LOG_MULT_HPP_
+
+
 #include "Fixed.h"
 #include <math.h>
 #include <iostream>
@@ -628,4 +632,4 @@ void mitch_mult(Fixed<I,F> *op1, Fixed<I,F> *op2, int total_bits)
 
 
 
-
+#endif
