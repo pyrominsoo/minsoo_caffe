@@ -10,6 +10,7 @@
 
 #include "caffe/util/Fixed.h"
 #include "caffe/util/log_mult.hpp"
+#include "caffe/util/DRUM_mult.hpp"
 #include "minsoo/fixed.hpp"
 #include <fstream>
 
@@ -20,6 +21,8 @@ bool log_report(false);
 // The global variable to decide on mult type
 // 1: float, 2: fixed, 3: mitch, 4: iterlog
 unsigned int mult_type;
+// k value for drum
+unsigned int drum_k;
 
 
 namespace caffe {
@@ -39,6 +42,164 @@ typedef Fixed<INTBITS,FRACBITS> fixed_d_t;
 
 //typedef Fixed<11,5> fixed_f_t;
 //typedef Fixed<11,5> fixed_d_t;
+
+void minsoo_sgemm_drum(const CBLAS_TRANSPOSE TransA, const CBLAS_TRANSPOSE TransB, 
+    const int M, const int N, const int K, 
+    const float alpha, const float* A, const float* B, const float beta, float* C) {
+
+    // Array in stack memory causes stack overflow. Allocate from heap.
+    // fixed_f_t op_A[M][K];
+    // fixed_f_t op_B[K][N];
+    fixed_f_t** op_A = new fixed_f_t*[M];
+    for (int i = 0; i < M; i++) {
+        op_A[i] = new fixed_f_t[K];
+    }
+    fixed_f_t** op_B = new fixed_f_t*[K];
+    for (int i = 0; i < K; i++) {
+        op_B[i] = new fixed_f_t[N];
+    }
+            
+    
+
+    // Assumes RowMajor Order
+
+    // Make op(A), which is M x K
+    if (TransA == CblasTrans) {
+        // Perform transpose
+        #pragma omp parallel for collapse(2)
+        for (int row = 0; row < M; row++) {
+            for (int col = 0; col < K; col++) {
+                op_A[row][col] = A[row + col*M];
+            }
+        }
+    } else if (TransA == CblasNoTrans) {
+        // No need to change
+        #pragma omp parallel for collapse(2)
+        for (int row = 0; row < M; row++) {
+            for (int col = 0; col < K; col++) {
+                op_A[row][col] = A[col + row*K];
+            }
+        }
+    } else {
+        // Invalid value. Trap
+        printf("ERROR: Invalid TransA value for minsoo_sgemm_drum.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Make op(B), which is K x N
+    if (TransB == CblasTrans) {
+        // Perform transpose
+        #pragma omp parallel for collapse(2)
+        for (int row = 0; row < K; row++) {
+            for (int col = 0; col < N; col++) {
+                op_B[row][col] = B[row + col*K];
+            }
+        }
+    } else if (TransB == CblasNoTrans) {
+        // No need to change
+        #pragma omp parallel for collapse(2)
+        for (int row = 0; row < K; row++) {
+            for (int col = 0; col < N; col++) {
+                op_B[row][col] = B[col + row*N];
+            }
+        }
+    } else {
+        // Invalid value. Trap
+        printf("ERROR: Invalid TransB value for minsoo_sgemm_drum.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // If needed, prepare for the file output
+    std::ofstream fout;
+    fout.open("gemm.log",ios::out | ios::app);
+
+
+    // Fill up C with alpha*op(A)*op(B) + beta*C
+    #pragma omp parallel for default(shared) collapse(2)
+    for (int row = 0; row < M; row++) {
+        for (int col = 0; col < N; col++) {
+            fixed_f_t accum = 0;
+            fixed_f_t temp;
+            for (int k_index = 0; k_index < K; k_index++) {
+                temp = op_A[row][k_index];
+                fixed_f_t op2 = op_B[k_index][col];
+                DRUM_mult(&temp, &op2,drum_k);
+                //temp *= op_B[k_index][col];
+                accum += temp;
+            }
+            accum *= alpha;
+            temp = beta;
+            temp *= C[row*N+col];
+            temp += accum;
+            C[row*N+col] = temp.to_float();
+        }
+    }
+
+    // Free the allocated memory
+    for (int i = 0; i < M; i++) {
+        delete[] op_A[i];
+    }
+    delete[] op_A;
+
+    for (int i = 0; i < K; i++) {
+        delete[] op_B[i];
+    }
+    delete[] op_B;
+
+    fout.close();
+}
+
+
+void minsoo_sgemv_drum(const CBLAS_TRANSPOSE TransA, 
+    const int M, const int N, 
+    const float alpha, const float* A, const float* x, const float beta, float* y) {
+
+    fixed_f_t temp;
+    fixed_f_t temp2;
+    fixed_f_t accum;
+        
+    // Assumes RowMajor Order
+
+    if (TransA == CblasTrans) {
+        // Transpose case
+        for (int row = 0; row < N; row++) {
+            accum = 0;
+            for (int col = 0; col < M; col++) {
+                temp = A[col*N+row];
+                temp2 = x[col];
+                DRUM_mult(&temp, &temp2,drum_k);
+                //temp *= x[col];
+                accum += temp;
+            }
+            accum *= alpha;
+            temp = beta;
+            temp *= y[row];
+            temp += accum;
+            y[row] = temp.to_float();
+        }
+    } else if (TransA == CblasNoTrans) {
+        // No transpose case
+        for (int row = 0; row < M; row++) {
+            accum = 0;
+            for (int col = 0; col < N; col++) {
+                temp = A[row*N+col];
+                temp2 = x[col];
+                DRUM_mult(&temp, &temp2,drum_k);
+                //temp *= x[col];
+                accum += temp;
+            }
+            accum *= alpha;
+            temp = beta;
+            temp *= y[row];
+            temp += accum;
+            y[row] = temp.to_float();
+        }
+    } else {
+        // Invalid value. Trap
+        printf("ERROR: Invalid TransA value for minsoo_sgemv_drum.\n");
+        exit(EXIT_FAILURE);
+    }
+}
 
 
 
@@ -1260,6 +1421,9 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
         case 4 :            
             minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
             break;
+        case 5 :
+            minsoo_sgemm_drum(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+            break;
         default :
             std::cout << "undefined mult_type: " << mult_type << std::endl;
             exit(1);
@@ -1307,6 +1471,9 @@ void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
             break;
         case 4 :            
             minsoo_sgemv_logm(TransA, M, N, alpha, A, x, beta, y); 
+            break;
+        case 5 :
+            minsoo_sgemv_drum(TransA, M, N, alpha, A, x, beta, y); 
             break;
         default :
             std::cout << "undefined mult_type: " << mult_type << std::endl;

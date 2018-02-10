@@ -27,6 +27,8 @@ extern int num_ilayer;
 // The global variable to decide on mult type
 // 1: float, 2: fixed, 3: mitch, 4: iterlog
 extern unsigned int mult_type;
+// K value for drum
+extern unsigned int drum_k;
  
 using caffe::Blob;
 using caffe::Caffe;
@@ -317,6 +319,18 @@ int test() {
   current_mult >> string_in;
   mult_type = stoi(string_in);
   current_mult.close();
+
+  // MINSOO prepare DRUM K value
+  std::ifstream k_input;
+  k_input.open("DRUM_K");
+  if (!k_input) {
+    std::cout << "Unable to open DRUM_K";
+    exit(1);
+  }
+  k_input >> string_in;
+  drum_k = stoi(string_in);
+  k_input.close();
+
 
   // MINSOO Prepare Statis
   statis_on = false;
