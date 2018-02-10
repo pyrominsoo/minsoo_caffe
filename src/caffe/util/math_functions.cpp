@@ -17,6 +17,11 @@
 bool gemm_report(false);
 bool log_report(false);
 
+// The global variable to decide on mult type
+// 1: float, 2: fixed, 3: mitch, 4: iterlog
+unsigned int mult_type;
+
+
 namespace caffe {
 
 
@@ -1241,8 +1246,28 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
   // int ldb = (TransB == CblasNoTrans) ? N : K;
   // cblas_sgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
     // ldb, beta, C, N);
+
+    switch (mult_type) {
+        case 1 : 
+            minsoo_sgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+            break;
+        case 2 :
+            minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+            break;
+        case 3 :
+            minsoo_sgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+            break;
+        case 4 :            
+            minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+            break;
+        default :
+            std::cout << "undefined mult_type: " << mult_type << std::endl;
+            exit(1);
+            break;
+    }
+  
   // minsoo_sgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
-  minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+  // minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
   // minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
   // minsoo_sgemm_mitchell(TransA, TransB, M, N, K, alpha, A, B, beta, C);
 }
@@ -1270,9 +1295,27 @@ void caffe_cpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const float alpha, const float* A, const float* x,
     const float beta, float* y) {
     
+    switch (mult_type) {
+        case 1 : 
+            minsoo_sgemv_float(TransA, M, N, alpha, A, x, beta, y); 
+            break;
+        case 2 :
+            minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
+            break;
+        case 3 :
+            minsoo_sgemv_mitchell(TransA, M, N, alpha, A, x, beta, y); 
+            break;
+        case 4 :            
+            minsoo_sgemv_logm(TransA, M, N, alpha, A, x, beta, y); 
+            break;
+        default :
+            std::cout << "undefined mult_type: " << mult_type << std::endl;
+            exit(1);
+            break;
+    }
   // cblas_sgemv(CblasRowMajor, TransA, M, N, alpha, A, N, x, 1, beta, y, 1);
     // minsoo_sgemv_float(TransA, M, N, alpha, A, x, beta, y); 
-    minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
+    // minsoo_sgemv_fixed(TransA, M, N, alpha, A, x, beta, y); 
     // minsoo_sgemv_logm(TransA, M, N, alpha, A, x, beta, y); 
     // minsoo_sgemv_mitchell(TransA, M, N, alpha, A, x, beta, y); 
 

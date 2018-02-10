@@ -16,6 +16,7 @@ namespace bp = boost::python;
 #include "caffe/util/signal_handler.h"
 
 //MINSOO  haha
+#include <fstream>
 #include "minsoo/Statis.hpp"
 extern Statis<float>* statis;
 extern Batch<float>* batch;
@@ -23,7 +24,10 @@ extern bool statis_on;
 extern int batch_size;
 extern int num_clayer;
 extern int num_ilayer;
-
+// The global variable to decide on mult type
+// 1: float, 2: fixed, 3: mitch, 4: iterlog
+extern unsigned int mult_type;
+ 
 using caffe::Blob;
 using caffe::Caffe;
 using caffe::Net;
@@ -301,6 +305,18 @@ int test() {
   vector<int> test_score_output_id;
   vector<float> test_score;
   float loss = 0;
+
+  // MINSOOO prepare mult type
+  std::ifstream current_mult;
+  string string_in;
+  current_mult.open("current_mult");
+  if (!current_mult) {
+    std::cout << "Unable to open current_mult";
+    exit(1);
+  }
+  current_mult >> string_in;
+  mult_type = stoi(string_in);
+  current_mult.close();
 
   // MINSOO Prepare Statis
   statis_on = false;
