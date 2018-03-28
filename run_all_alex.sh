@@ -35,24 +35,6 @@ make;
 cp ./include/minsoo/intbit/fixed10_22.hpp ./include/minsoo/fixed.hpp;
 make;
 ./test_alexnet.sh 2> Alex_log/intbit/fixed10_22.log
-cp ./include/minsoo/fracbit/fixed30_2.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed30_2.log
-cp ./include/minsoo/intbit/fixed2_30.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed2_30.log
-cp ./include/minsoo/fracbit/fixed29_3.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed29_3.log
-cp ./include/minsoo/intbit/fixed3_29.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed3_29.log
-cp ./include/minsoo/fracbit/fixed28_4.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/fracbit/fixed28_4.log
-cp ./include/minsoo/intbit/fixed4_28.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed4_28.log
 cp ./include/minsoo/fracbit/fixed27_5.hpp ./include/minsoo/fixed.hpp;
 make;
 ./test_alexnet.sh 2> Alex_log/fracbit/fixed27_5.log
@@ -92,6 +74,3 @@ make;
 cp ./include/minsoo/fracbit/fixed16_16.hpp ./include/minsoo/fixed.hpp;
 make;
 ./test_alexnet.sh 2> Alex_log/fracbit/fixed16_16.log
-cp ./include/minsoo/intbit/fixed16_16.hpp ./include/minsoo/fixed.hpp;
-make;
-./test_alexnet.sh 2> Alex_log/intbit/fixed16_16.log

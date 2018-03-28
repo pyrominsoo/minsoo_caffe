@@ -110,3 +110,11 @@ nohup.out
 
 # mult selection
 current_mult
+
+#log collection
+varying.txt
+nonvarying.txt
+varying_list
+nonvarying_list
+log_list
+
