@@ -108,5 +108,13 @@ Result_alexnet/
 include/minsoo/fixed.hpp
 nohup.out
 
-# current mult indicator
+# mult selection
 current_mult
+
+#log collection
+varying.txt
+nonvarying.txt
+varying_list
+nonvarying_list
+log_list
+

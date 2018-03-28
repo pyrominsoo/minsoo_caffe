@@ -212,6 +212,19 @@ layer {
   }
 }
 layer {
+  name: "accuracy_top_5"
+  type: "Accuracy"
+  bottom: "ip1"
+  bottom: "label"
+  top: "accuracy_top_5"
+  accuracy_param {
+    top_k: 5
+  }
+  include {
+    phase: TEST
+  }
+}
+layer {
   name: "loss"
   type: "SoftmaxWithLoss"
   bottom: "ip1"
