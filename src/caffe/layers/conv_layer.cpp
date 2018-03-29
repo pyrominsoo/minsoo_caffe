@@ -43,7 +43,8 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
       if (batch->reportID() == 0 && batch->returnInfer(n)->reportID() == 1 && n == 1) {
-        mult_dump = true; 
+        //mult_dump = true; 
+        mult_dump = false;
       }
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);

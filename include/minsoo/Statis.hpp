@@ -72,7 +72,9 @@ class Infer {
         Infer(int id, uint max_clayer, uint max_ilayer);
         ~Infer();
         bool storeResult(bool result);
+        bool storeResult5(bool result);
         bool reportResult(void);
+        bool reportResult5(void);
         bool addConvLayer(ConvLayer<Dtype>* clayer);
         uint reportCPos(void);
         bool addIPLayer(IPLayer<Dtype>* ilayer);
@@ -87,6 +89,7 @@ class Infer {
         int id;
         bool evaluated; // correct value valid
         bool correct;   // 0 incorrect, 1 correct
+        bool correct5;   // 0 incorrect, 1 correct
         uint max_clayer;
         uint max_ilayer;
         ConvLayer<Dtype>* *clayers;
@@ -107,6 +110,7 @@ class Batch {
         Infer<Dtype>* returnInfer(uint idx);
         uint reportPos(void);
         uint reportNumCorrect(void);
+        uint reportNumCorrect5(void);
         int  reportID(void);
         void printAll(void);
         void fwriteAll(std::ofstream* file);
@@ -133,8 +137,10 @@ class Statis {
         Batch<Dtype>* returnBatch(uint idx);
         uint reportPos(void);
         uint reportNumCorrect(void);
+        uint reportNumCorrect5(void);
         uint reportTotalInfer(void);
         float reportAccuracy(void);
+        float reportAccuracy5(void);
         void printAll(void);
         void fwriteAll(const char* filename);
         void fwriteBare(const char* filename);

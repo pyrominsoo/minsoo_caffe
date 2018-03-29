@@ -377,7 +377,7 @@ int test() {
 
   if (statis_on) {
       // MINSOO Print out and delete statis
-      statis->fwriteBare((char*)"winner.log");
+      statis->fwriteBare((char*)"detail.log");
       delete statis;
   }
 

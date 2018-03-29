@@ -358,6 +358,7 @@ Infer<Dtype>::Infer(int id, uint max_clayer, uint max_ilayer) {
     this->id = id;
     this->evaluated = false;
     this->correct = false;
+    this->correct5 = false;
     this->max_clayer = max_clayer;
     this->max_ilayer = max_ilayer;
     this->clayers = new ConvLayer<Dtype>*[max_clayer];
@@ -395,6 +396,19 @@ bool Infer<Dtype>::storeResult(bool result) {
     return true;
 }
 
+
+template <typename Dtype>
+bool Infer<Dtype>::storeResult5(bool result) {
+    if (result) {
+        this->correct5 = true;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
 template <typename Dtype>
 bool Infer<Dtype>::reportResult(void) {
     if (!this->evaluated) {
@@ -403,6 +417,11 @@ bool Infer<Dtype>::reportResult(void) {
     }
 
     return correct;
+}
+
+template <typename Dtype>
+bool Infer<Dtype>::reportResult5(void) {
+    return correct5;
 }
 
 
@@ -485,6 +504,7 @@ void Infer<Dtype>::printAll(void) {
     std::cout << "Printing Infer ID: " << this->id << std::endl;
     std::cout << "evaluated: " << this->evaluated << std::endl;
     std::cout << "correct: " << this->correct << std::endl;
+    std::cout << "correct5: " << this->correct5 << std::endl;
     std::cout << "Max_CLayer: " << (int)this->max_clayer << std::endl;
     std::cout << "Max_ILayer: " << (int)this->max_ilayer << std::endl;
     std::cout << "Cpos: " << this->cpos << std::endl;
@@ -515,6 +535,7 @@ void Infer<Dtype>::fwriteAll(std::ofstream* file) {
     (*file) << "Printing Infer ID: " << this->id << std::endl;
     (*file) << "evaluated: " << this->evaluated << std::endl;
     (*file) << "correct: " << this->correct << std::endl;
+    (*file) << "correct5: " << this->correct5 << std::endl;
     (*file) << "Max_CLayer: " << (int)this->max_clayer << std::endl;
     (*file) << "Max_ILayer: " << (int)this->max_ilayer << std::endl;
     (*file) << "Cpos: " << this->cpos << std::endl;
@@ -542,6 +563,7 @@ void Infer<Dtype>::fwriteBare(std::ofstream* file) {
 
     (*file) << "inf " << this->id << std::endl;
     (*file) << "cor " << this->correct << std::endl;
+    (*file) << "cor5 " << this->correct5 << std::endl;
     (*file) << "cpos " << this->cpos << std::endl;
     (*file) << "ipos " << this->ipos << std::endl;
 
@@ -565,6 +587,7 @@ void Infer<Dtype>::fwriteSimple(std::ofstream* file) {
     (*file) << "Printing Infer ID: " << this->id << std::endl;
     (*file) << "evaluated: " << this->evaluated << std::endl;
     (*file) << "correct: " << this->correct << std::endl;
+    (*file) << "correct5: " << this->correct5 << std::endl;
     (*file) << "Max_CLayer: " << (int)this->max_clayer << std::endl;
     (*file) << "Max_ILayer: " << (int)this->max_ilayer << std::endl;
     (*file) << "Cpos: " << this->cpos << std::endl;
@@ -656,6 +679,18 @@ uint Batch<Dtype>::reportNumCorrect(void) {
 }
 
 template <typename Dtype>
+uint Batch<Dtype>::reportNumCorrect5(void) {
+    uint num_correct5 = 0;
+
+    for (int i = 0; i < this->pos; i++) {
+        if (this->infers[i]->reportResult5()) {
+            num_correct5++;
+        } 
+    }
+    return num_correct5;
+}
+
+template <typename Dtype>
 int Batch<Dtype>::reportID(void) {
     return this->id;
 }
@@ -668,6 +703,7 @@ void Batch<Dtype>::printAll(void) {
     std::cout << "Max_Infer: " << (int)this->max_infer << std::endl;
     std::cout << "Position: " << this->pos << std::endl;
     std::cout << "NumCorrect: " << this->reportNumCorrect() << std::endl;
+    std::cout << "NumCorrect5: " << this->reportNumCorrect5() << std::endl;
     std::cout << std::endl;
 
     for (i = 0; i < this->pos; i++) {
@@ -690,6 +726,7 @@ void Batch<Dtype>::fwriteAll(std::ofstream* file) {
     (*file) << "Max_Infer: " << (int)this->max_infer << std::endl;
     (*file) << "Position: " << this->pos << std::endl;
     (*file) << "NumCorrect: " << this->reportNumCorrect() << std::endl;
+    (*file) << "NumCorrect5: " << this->reportNumCorrect5() << std::endl;
     (*file) << std::endl;
 
     for (i = 0; i < this->pos; i++) {
@@ -730,6 +767,7 @@ void Batch<Dtype>::fwriteSimple(std::ofstream* file) {
     (*file) << "Max_Infer: " << (int)this->max_infer << std::endl;
     (*file) << "Position: " << this->pos << std::endl;
     (*file) << "NumCorrect: " << this->reportNumCorrect() << std::endl;
+    (*file) << "NumCorrect5: " << this->reportNumCorrect5() << std::endl;
     (*file) << std::endl;
 
     for (i = 0; i < this->pos; i++) {
@@ -862,6 +900,16 @@ uint Statis<Dtype>::reportNumCorrect(void) {
     return num_correct;
 }
 
+template <typename Dtype>
+uint Statis<Dtype>::reportNumCorrect5(void) {
+    uint num_correct5 = 0;
+
+    for (int i = 0; i < this->pos; i++) {
+        num_correct5 += this->batches[i]->reportNumCorrect5();    
+    }
+
+    return num_correct5;
+}
 
 template <typename Dtype>
 uint Statis<Dtype>::reportTotalInfer(void) {
@@ -881,6 +929,13 @@ float Statis<Dtype>::reportAccuracy(void) {
     return ((float)num_correct)/((float)total_infer);
 }
 
+template <typename Dtype>
+float Statis<Dtype>::reportAccuracy5(void) {
+    uint num_correct5 = this->reportNumCorrect5();
+    uint total_infer = this->reportTotalInfer();
+
+    return ((float)num_correct5)/((float)total_infer);
+}
 
 template <typename Dtype>
 void Statis<Dtype>::printAll(void) {
@@ -890,8 +945,10 @@ void Statis<Dtype>::printAll(void) {
     std::cout << "Max_Batch: " << (int)this->max_batch << std::endl;
     std::cout << "pos: " << this->pos << std::endl;
     std::cout << "NumCorrect: " << this->reportNumCorrect() << std::endl;
+    std::cout << "NumCorrect5: " << this->reportNumCorrect5() << std::endl;
     std::cout << "TotalInfer: " << this->reportTotalInfer() << std::endl;
     std::cout << "Accuracy: " << this->reportAccuracy() << std::endl;
+    std::cout << "Accuracy5: " << this->reportAccuracy5() << std::endl;
     std::cout << std::endl;
 
     for (i = 0; i < this->pos; i++) {
@@ -918,8 +975,10 @@ void Statis<Dtype>::fwriteAll(const char* filename) {
     fout << "Max_Batch: " << (int)this->max_batch << std::endl;
     fout << "pos: " << this->pos << std::endl;
     fout << "NumCorrect: " << this->reportNumCorrect() << std::endl;
+    fout << "NumCorrect5: " << this->reportNumCorrect5() << std::endl;
     fout << "TotalInfer: " << this->reportTotalInfer() << std::endl;
     fout << "Accuracy: " << this->reportAccuracy() << std::endl;
+    fout << "Accuracy5: " << this->reportAccuracy5() << std::endl;
     fout << std::endl;
 
     for (i = 0; i < this->pos; i++) {
@@ -946,8 +1005,10 @@ void Statis<Dtype>::fwriteBare(const char* filename) {
     fout << "stat " << this->id << std::endl;
     fout << "pos " << this->pos << std::endl;
     fout << "numcor " << this->reportNumCorrect() << std::endl;
+    fout << "numcor5 " << this->reportNumCorrect5() << std::endl;
     fout << "total " << this->reportTotalInfer() << std::endl;
     fout << "acc " << this->reportAccuracy() << std::endl;
+    fout << "acc5 " << this->reportAccuracy5() << std::endl;
 
     for (i = 0; i < this->pos; i++) {
         this->batches[i]->fwriteBare(&fout);
@@ -974,8 +1035,10 @@ void Statis<Dtype>::fwriteSimple(const char* filename) {
     fout << "Max_Batch: " << (int)this->max_batch << std::endl;
     fout << "pos: " << this->pos << std::endl;
     fout << "NumCorrect: " << this->reportNumCorrect() << std::endl;
+    fout << "NumCorrect5: " << this->reportNumCorrect5() << std::endl;
     fout << "TotalInfer: " << this->reportTotalInfer() << std::endl;
     fout << "Accuracy: " << this->reportAccuracy() << std::endl;
+    fout << "Accuracy5: " << this->reportAccuracy5() << std::endl;
     fout << std::endl;
 
     for (i = 0; i < this->pos; i++) {

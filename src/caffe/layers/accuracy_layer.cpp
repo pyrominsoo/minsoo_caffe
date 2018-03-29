@@ -110,7 +110,12 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 
           //MINSOO prediction true
           if (statis_on) {
-            curr_infer->storeResult(true);
+            if (top_k_ == 1) {
+                curr_infer->storeResult(true);
+            }
+            else {  // top-5 accuracy
+                curr_infer->storeResult5(true);
+            }
           }
 
           ++accuracy;
@@ -119,7 +124,12 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         } else {
           // MINSOO prediction false
           if (statis_on) {
-            curr_infer->storeResult(false);
+            if (top_k_ == 1) {
+                curr_infer->storeResult(false);
+            }
+            else {
+                curr_infer->storeResult5(false);
+            }
           }
         }
       }
