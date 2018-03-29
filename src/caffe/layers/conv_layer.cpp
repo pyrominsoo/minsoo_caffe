@@ -11,9 +11,9 @@ bool statis_on;
 bool mult_dump(false);
 Statis<float>* statis;
 Batch<float>* batch;
-int batch_size = 100;
-int num_clayer = 2;
-int num_ilayer = 2;
+int batch_size = 50;
+int num_clayer = 5;
+int num_ilayer = 3;
 
 namespace caffe {
 
