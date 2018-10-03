@@ -9,6 +9,9 @@
 extern bool log_report;
 bool statis_on;
 bool mult_dump(false);
+bool mult_dump2(false);
+bool mult_dump3(false);
+int dump_layer(0);
 Statis<float>* statis;
 Batch<float>* batch;
 int batch_size = 100;
@@ -46,13 +49,18 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         //mult_dump = true; 
         mult_dump = false;
       }
+      mult_dump2 = true;
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
           top_data + n * this->top_dim_);
-      mult_dump = false;
+      mult_dump2 = false;
+
+      mult_dump3 = true;
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
       }
+      mult_dump3 = false;
+      dump_layer += 1;
     }
   }
 

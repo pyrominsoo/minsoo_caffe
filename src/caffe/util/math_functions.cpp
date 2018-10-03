@@ -19,12 +19,20 @@
 #include "caffe/util/asm_mult.hpp"
 #include "minsoo/fixed.hpp"
 #include <fstream>
+#include <string>
 
 
 // The global variable to turn on value reporting
 bool gemm_report(false);
 bool log_report(false);
 extern bool mult_dump;
+extern bool mult_dump2;
+extern bool mult_dump3;
+extern bool mult_dump4;
+extern bool mult_dump5;
+extern int dump_layer;
+extern int dump_layer2;
+ofstream outfile;
 
 // The global variable to decide on mult type
 // 1: float, 2: fixed, 3: mitch, 4: iterlog
@@ -2524,6 +2532,66 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
   // cblas_sgemm(CblasRowMajor, TransA, TransB, M, N, K, alpha, A, lda, B,
     // ldb, beta, C, N);
 
+    if (mult_dump3) {
+        std::string fname = "dump_bias"+std::to_string(dump_layer)+".dump";
+        outfile.open(fname);
+        outfile << "TransA: " << TransA << std::endl;
+        outfile << "TransB: " << TransB << std::endl;
+        outfile << "M: " << M << std::endl;
+        outfile << "N: " << N << std::endl;
+        outfile << "K: " << K << std::endl;
+        outfile << "alpha: " << alpha << std::endl;
+        outfile << "beta: " << beta << std::endl;
+        outfile << "Input: " << std::endl;
+        for (int i = 0; i < (M * K); i++) {
+            outfile << A[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile << "Weights: " << std::endl;
+        for (int i = 0; i < (K * N); i++) {
+            outfile << B[i] << "\t";
+        }
+        outfile << std::endl;
+        
+        outfile << std::endl;
+        outfile << "Answer: " << std::endl;
+        for (int i = 0; i < (M * N); i++) {
+            outfile << C[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile.close();
+    }
+    
+    if (mult_dump5) {
+        std::string fname = "inner_bias"+std::to_string(dump_layer2)+".dump";
+        outfile.open(fname);
+        outfile << "TransA: " << TransA << std::endl;
+        outfile << "TransB: " << TransB << std::endl;
+        outfile << "M: " << M << std::endl;
+        outfile << "N: " << N << std::endl;
+        outfile << "K: " << K << std::endl;
+        outfile << "alpha: " << alpha << std::endl;
+        outfile << "beta: " << beta << std::endl;
+        outfile << "Input: " << std::endl;
+        for (int i = 0; i < (M * K); i++) {
+            outfile << A[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile << "Weights: " << std::endl;
+        for (int i = 0; i < (K * N); i++) {
+            outfile << B[i] << "\t";
+        }
+        outfile << std::endl;
+        
+        outfile << std::endl;
+        outfile << "Answer: " << std::endl;
+        for (int i = 0; i < (M * N); i++) {
+            outfile << C[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile.close();
+    }
+
     switch (mult_type) {
         case 1 : 
             minsoo_sgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
@@ -2563,7 +2631,66 @@ void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
             exit(1);
             break;
     }
+
+    if (mult_dump2) {
+        std::string fname = "dump_mult"+std::to_string(dump_layer)+".dump";
+        outfile.open(fname);
+        outfile << "TransA: " << TransA << std::endl;
+        outfile << "TransB: " << TransB << std::endl;
+        outfile << "M: " << M << std::endl;
+        outfile << "N: " << N << std::endl;
+        outfile << "K: " << K << std::endl;
+        outfile << "alpha: " << alpha << std::endl;
+        outfile << "beta: " << beta << std::endl;
+        outfile << "Input: " << std::endl;
+        for (int i = 0; i < (M * K); i++) {
+            outfile << A[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile << "Weights: " << std::endl;
+        for (int i = 0; i < (K * N); i++) {
+            outfile << B[i] << "\t";
+        }
+        outfile << std::endl;
+        
+        outfile << std::endl;
+        outfile << "Answer: " << std::endl;
+        for (int i = 0; i < (M * N); i++) {
+            outfile << C[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile.close();
+    }
   
+    if (mult_dump4) {
+        std::string fname = "inner_dump"+std::to_string(dump_layer2)+".dump";
+        outfile.open(fname);
+        outfile << "TransA: " << TransA << std::endl;
+        outfile << "TransB: " << TransB << std::endl;
+        outfile << "M: " << M << std::endl;
+        outfile << "N: " << N << std::endl;
+        outfile << "K: " << K << std::endl;
+        outfile << "alpha: " << alpha << std::endl;
+        outfile << "beta: " << beta << std::endl;
+        outfile << "Input: " << std::endl;
+        for (int i = 0; i < (M * K); i++) {
+            outfile << A[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile << "Weights: " << std::endl;
+        for (int i = 0; i < (K * N); i++) {
+            outfile << B[i] << "\t";
+        }
+        outfile << std::endl;
+        
+        outfile << std::endl;
+        outfile << "Answer: " << std::endl;
+        for (int i = 0; i < (M * N); i++) {
+            outfile << C[i] << "\t";
+        }
+        outfile << std::endl;
+        outfile.close();
+    }
   // minsoo_sgemm_float(TransA, TransB, M, N, K, alpha, A, B, beta, C);
   // minsoo_sgemm_fixed(TransA, TransB, M, N, K, alpha, A, B, beta, C);
   // minsoo_sgemm_logm(TransA, TransB, M, N, K, alpha, A, B, beta, C);
