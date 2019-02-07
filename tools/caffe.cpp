@@ -333,7 +333,7 @@ int test() {
 
 
   // MINSOO Prepare Statis
-  statis_on = false;
+  statis_on = true;
   if (statis_on) {
       statis = new Statis<float>(0, FLAGS_iterations);
   }
@@ -375,11 +375,6 @@ int test() {
     }
   }
 
-  if (statis_on) {
-      // MINSOO Print out and delete statis
-      statis->fwriteBare((char*)"winner.log");
-      delete statis;
-  }
 
   loss /= FLAGS_iterations;
   LOG(INFO) << "Loss: " << loss;

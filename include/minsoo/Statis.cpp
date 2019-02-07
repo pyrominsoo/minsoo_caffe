@@ -385,10 +385,10 @@ Infer<Dtype>::~Infer(void) {
 
 template <typename Dtype>
 bool Infer<Dtype>::storeResult(bool result) {
-    if (this->evaluated) {
-        perror("ERR: Infer::evaluated fail: already evaluated");
-        exit(EXIT_FAILURE);
-    }
+    // if (this->evaluated) {
+    //     perror("ERR: Infer::evaluated fail: already evaluated");
+    //     exit(EXIT_FAILURE);
+    // }
 
     this->evaluated = true;
     this->correct = result;

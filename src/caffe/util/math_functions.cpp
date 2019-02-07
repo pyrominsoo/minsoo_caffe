@@ -2700,7 +2700,40 @@ void minsoo_dgemv_float(const CBLAS_TRANSPOSE TransA,
 }
 
 
+template<>
+void minsoo_gemm_special1<float>(const CBLAS_TRANSPOSE TransA,
+    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+    const float alpha, const float* A, const float* B, const float beta,
+    float* C) {
 
+    minsoo_sgemm_mitchk_c1_logadd_ult(TransA, TransB, M, N, K, alpha, A, B, beta, C);
+  
+}
+
+
+template<>
+void minsoo_gemm_special1<double>(const CBLAS_TRANSPOSE TransA,
+    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+    const double alpha, const double* A, const double* B, const double beta,
+    double* C) {
+
+}
+
+
+template<>
+void minsoo_gemv_special1<float>(const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const float alpha, const float* A, const float* x,
+    const float beta, float* y) {
+    
+    minsoo_sgemv_mitchk_c1_logadd_ult(TransA, M, N, alpha, A, x, beta, y); 
+}
+
+template<>
+void minsoo_gemv_special1<double>(const CBLAS_TRANSPOSE TransA, const int M,
+    const int N, const double alpha, const double* A, const double* x,
+    const double beta, double* y) {
+    
+}
 
 template<>
 void caffe_cpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
