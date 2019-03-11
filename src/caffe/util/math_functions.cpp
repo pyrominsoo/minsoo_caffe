@@ -18,6 +18,7 @@
 #include "caffe/util/mitchk_c1.hpp"
 #include "caffe/util/asm_mult.hpp"
 #include "caffe/util/logadd_ultra.hpp"
+#include "caffe/util/logadd_ultra_mod.hpp"
 #include "minsoo/fixed.hpp"
 #include <fstream>
 
@@ -147,7 +148,7 @@ void minsoo_sgemm_mitchk_c1_logadd_ult(const CBLAS_TRANSPOSE TransA,
             // Accumulate mult_res
             for (int k_index = 0; k_index < K; k_index++) {
                 fixed_f_t op2 = mult_res[k_index];
-                logadd_ultra(&accum,&op2);
+                logadd_ultra_mod(&accum,&op2);
                 //accum_out << accum.to_double() << std::endl;
             }
             //accum_out << "Final_accum: " << accum.to_double() << std::endl;
@@ -205,7 +206,7 @@ void minsoo_sgemv_mitchk_c1_logadd_ult(const CBLAS_TRANSPOSE TransA,
             accum = 0;
             for (int col = 0; col < M; col++) {
                 fixed_f_t op2 = mult_res[col];
-                logadd_ultra(&accum,&op2);
+                logadd_ultra_mod(&accum,&op2);
             }
             accum *= alpha;
             temp = beta;
@@ -228,7 +229,7 @@ void minsoo_sgemv_mitchk_c1_logadd_ult(const CBLAS_TRANSPOSE TransA,
             accum = 0;
             for (int col = 0; col < N; col++) {
                 fixed_f_t op2 = mult_res[col];
-                logadd_ultra(&accum,&op2);
+                logadd_ultra_mod(&accum,&op2);
             }
             accum *= alpha;
             temp = beta;
