@@ -271,6 +271,27 @@ void BaseConvolutionLayer<Dtype>::forward_cpu_gemm(const Dtype* input,
   }
 }
 
+
+template <typename Dtype>
+void BaseConvolutionLayer<Dtype>::forward_cpu_gemm_special1(const Dtype* input,
+    const Dtype* weights, Dtype* output, bool skip_im2col) {
+  const Dtype* col_buff = input;
+  if (!is_1x1_) {
+    if (!skip_im2col) {
+      conv_im2col_cpu(input, col_buffer_.mutable_cpu_data());
+    }
+    col_buff = col_buffer_.cpu_data();
+  }
+  for (int g = 0; g < group_; ++g) {
+    minsoo_gemm_special1(CblasNoTrans, CblasNoTrans, conv_out_channels_ /
+        group_, conv_out_spatial_dim_, kernel_dim_,
+        (Dtype)1., weights + weight_offset_ * g, col_buff + col_offset_ * g,
+        (Dtype)0., output + output_offset_ * g);
+  }
+}
+
+
+
 template <typename Dtype>
 void BaseConvolutionLayer<Dtype>::forward_cpu_bias(Dtype* output,
     const Dtype* bias) {

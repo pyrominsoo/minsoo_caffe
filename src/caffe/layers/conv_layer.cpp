@@ -45,21 +45,34 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
     for (int n = 0; n < this->num_; ++n) {
-      if (batch->reportID() == 0 && batch->returnInfer(n)->reportID() == 1 && n == 1) {
-        //mult_dump = true; 
-        mult_dump = false;
-      }
-      mult_dump2 = true;
+      // if (batch->reportID() == 0 && batch->returnInfer(n)->reportID() == 1 && n == 1) {
+      //   //mult_dump = true; 
+      //   mult_dump = false;
+      // }
+      // mult_dump2 = true;
+      // this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+      //     top_data + n * this->top_dim_);
+      // mult_dump2 = false;
+      //
+      // mult_dump3 = true;
+      
+      
+      //Infer<float>* curr_infer = batch->returnInfer(n);
+      // if (curr_infer->cpos == 0) {
+      //     this->forward_cpu_gemm_special1(bottom_data + n * this->bottom_dim_, weight,
+      //         top_data + n * this->top_dim_);
+      // } else {
+      // this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+      //     top_data + n * this->top_dim_);
+      // }
       this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
-          top_data + n * this->top_dim_);
-      mult_dump2 = false;
+           top_data + n * this->top_dim_);
 
-      mult_dump3 = true;
       if (this->bias_term_) {
         const Dtype* bias = this->blobs_[1]->cpu_data();
         this->forward_cpu_bias(top_data + n * this->top_dim_, bias);
       }
-      mult_dump3 = false;
+      //mult_dump3 = false;
       dump_layer += 1;
     }
   }
