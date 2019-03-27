@@ -85,6 +85,7 @@ class Infer {
         void fwriteBare(std::ofstream* file);
         void fwriteSimple(std::ofstream* file);
 
+        uint cpos;
     private:
         int id;
         bool evaluated; // correct value valid
@@ -96,7 +97,6 @@ class Infer {
         IPLayer<Dtype>* *ilayers;
         bool *cvalid;
         bool *ivalid;
-        uint cpos;
         uint ipos;
 };
 

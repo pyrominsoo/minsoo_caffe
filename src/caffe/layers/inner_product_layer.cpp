@@ -12,6 +12,10 @@ extern bool statis_on;
 extern int batch_size;
 extern int num_ilayer;
 extern Batch<float>* batch;
+bool mult_dump4(false);
+bool mult_dump5(false);
+int dump_layer2(0);
+extern int dump_layer;
 
 namespace caffe {
 
@@ -95,14 +99,19 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const Dtype* bottom_data = bottom[0]->cpu_data();
   Dtype* top_data = top[0]->mutable_cpu_data();
   const Dtype* weight = this->blobs_[0]->cpu_data();
+  // mult_dump4 = true;
   caffe_cpu_gemm<Dtype>(CblasNoTrans, transpose_ ? CblasNoTrans : CblasTrans,
       M_, N_, K_, (Dtype)1.,
       bottom_data, weight, (Dtype)0., top_data);
+  // mult_dump4 = false;
+  // mult_dump5 = true;
   if (bias_term_) {
     caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, M_, N_, 1, (Dtype)1.,
         bias_multiplier_.cpu_data(),
         this->blobs_[1]->cpu_data(), (Dtype)1., top_data);
   }
+  // mult_dump5 = false;
+  dump_layer2 += 1;
 
   // MINSOO Statis gathering
   if (statis_on) {
