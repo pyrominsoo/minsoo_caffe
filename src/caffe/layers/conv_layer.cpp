@@ -41,10 +41,10 @@ template <typename Dtype>
 void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {
   const Dtype* weight = this->blobs_[0]->cpu_data();
-  for (int i = 0; i < bottom.size(); ++i) {
+  for (int i = 0; i < bottom.size(); ++i) { // bottom.size() == 1 usually
     const Dtype* bottom_data = bottom[i]->cpu_data();
     Dtype* top_data = top[i]->mutable_cpu_data();
-    for (int n = 0; n < this->num_; ++n) {
+    for (int n = 0; n < this->num_; ++n) {  // this->num_ is number of images per batch
       // if (batch->reportID() == 0 && batch->returnInfer(n)->reportID() == 1 && n == 1) {
       //   //mult_dump = true; 
       //   mult_dump = false;
@@ -65,7 +65,13 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
       //     top_data + n * this->top_dim_);
       // }
-      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
+      
+      // std::cout << this->bottom_dim_ << std::endl;
+      // this->bottom_dim_. This is where color is 
+      // for alexnet: 154587, 69984, 43264, 64896, 64896   227 x 227 x 3
+      // for cifar-10 : 3072, 8192, 2048    32 x 32 x 3 
+      // for mnist : 784, 2880      28 x 28 x 1
+      this->forward_cpu_gemm_special1(bottom_data + n * this->bottom_dim_, weight,
            top_data + n * this->top_dim_);
 
       if (this->bias_term_) {
@@ -80,6 +86,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   // MINSOO status gathering
   if (statis_on) {
     static int count_conv = 0;
+    // std::cout << bottom.size() << std::endl; 
     for (int h = 0; h < bottom.size(); h++) { //probably for colors
       if (h != 0) {
         perror("conv_layer.cpp:58: h is not 0");

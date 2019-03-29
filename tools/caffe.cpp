@@ -353,7 +353,10 @@ int test() {
         caffe_net.Forward(&iter_loss);
     loss += iter_loss;
     int idx = 0;
+    // std::cout << result.size() << std::endl;
     for (int j = 0; j < result.size(); ++j) {
+      // result.size() is not color. It's how many outputs there are.
+      // For example, 2 if acc and loss, 3 if acc, acc5 and loss
       const float* result_vec = result[j]->cpu_data();
       for (int k = 0; k < result[j]->count(); ++k, ++idx) {
         const float score = result_vec[k];
