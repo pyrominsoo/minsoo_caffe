@@ -71,7 +71,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
       // for alexnet: 154587, 69984, 43264, 64896, 64896   227 x 227 x 3
       // for cifar-10 : 3072, 8192, 2048    32 x 32 x 3 
       // for mnist : 784, 2880      28 x 28 x 1
-      this->forward_cpu_gemm_special1(bottom_data + n * this->bottom_dim_, weight,
+      this->forward_cpu_gemm(bottom_data + n * this->bottom_dim_, weight,
            top_data + n * this->top_dim_);
 
       if (this->bias_term_) {
