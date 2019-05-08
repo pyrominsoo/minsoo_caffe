@@ -753,6 +753,56 @@ void Batch<Dtype>::fwriteBare(std::ofstream* file) {
     }
 }
 
+template <typename Dtype>
+void Batch<Dtype>::fwriteBareOne(std::ofstream* file, int infnum) {
+    int i;
+
+    if (!file) {
+        perror("ERR: Batch::fwriteBareOne failed: file NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    (*file) << "bat " << this->id << std::endl;
+    (*file) << "pos " << this->pos << std::endl;
+
+    if (infnum < 0) {
+        perror("ERR: Batch:fwriteBareOne failed: infnum < 0");
+        exit(EXIT_FAILURE);
+    } else if (infnum >= this->pos) {
+        perror("ERR: Batch:fwriteBareOne failed: infnum >= num_inf");
+        exit(EXIT_FAILURE);
+    } else {
+        this->infers[infnum]->fwriteBare(file);
+    }
+
+}
+
+template <typename Dtype>
+void Batch<Dtype>::fwriteBareSel(std::ofstream* file, int infnum[], int size) {
+    int i;
+
+    if (!file) {
+        perror("ERR: Batch::fwriteBareSel failed: file NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    (*file) << "bat " << this->id << std::endl;
+    (*file) << "pos " << this->pos << std::endl;
+    
+    for (i = 0; i < size; i++) {
+        int curr_num = infnum[i];
+        
+        if (curr_num < 0) {
+            perror("ERR: Batch:fwriteBareSel failed: curr_num < 0");
+            exit(EXIT_FAILURE);
+        } else if (curr_num >= this->pos) {
+            perror("ERR: Batch:fwriteBareSel failed: curr_num >= num_inf");
+            exit(EXIT_FAILURE);
+        } else {
+            this->infers[curr_num]->fwriteBare(file);
+        }
+    }
+}
 
 template <typename Dtype>
 void Batch<Dtype>::fwriteSimple(std::ofstream* file) {
@@ -1016,6 +1066,77 @@ void Statis<Dtype>::fwriteBare(const char* filename) {
 
     fout.close();
 }
+
+
+template <typename Dtype>
+void Statis<Dtype>::fwriteBareOne(const char* filename, int batchnum, int infnum) {
+    int i;
+
+    std::ofstream fout;
+    fout.open(filename, std::ios::out);
+
+
+    if (!fout) {
+        perror("ERR: Statis::fwriteBareOne failed: fout NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    fout << "stat " << this->id << std::endl;
+    fout << "pos " << this->pos << std::endl;
+    fout << "numcor " << this->reportNumCorrect() << std::endl;
+    fout << "numcor5 " << this->reportNumCorrect5() << std::endl;
+    fout << "total " << this->reportTotalInfer() << std::endl;
+    fout << "acc " << this->reportAccuracy() << std::endl;
+    fout << "acc5 " << this->reportAccuracy5() << std::endl;
+
+    if (batchnum < 0) {
+        perror("ERR: Statis:fwriteBareOne failed: batchnum < 0");
+        exit(EXIT_FAILURE);
+    } else if (batchnum >= this->pos) {
+        perror("ERR: Statis:fwriteBareOne failed: batchnum >= num_batch");
+        exit(EXIT_FAILURE);
+    } else {
+        this->batches[batchnum]->fwriteBareOne(&fout, infnum);
+    }
+
+    fout.close();
+}
+
+
+template <typename Dtype>
+void Statis<Dtype>::fwriteBareSel(const char* filename, int batchnum, int infnum[], int size) {
+    int i;
+
+    std::ofstream fout;
+    fout.open(filename, std::ios::out);
+
+
+    if (!fout) {
+        perror("ERR: Statis::fwriteBareSel failed: fout NULL");
+        exit(EXIT_FAILURE);
+    }
+
+    fout << "stat " << this->id << std::endl;
+    fout << "pos " << this->pos << std::endl;
+    fout << "numcor " << this->reportNumCorrect() << std::endl;
+    fout << "numcor5 " << this->reportNumCorrect5() << std::endl;
+    fout << "total " << this->reportTotalInfer() << std::endl;
+    fout << "acc " << this->reportAccuracy() << std::endl;
+    fout << "acc5 " << this->reportAccuracy5() << std::endl;
+
+    if (batchnum < 0) {
+        perror("ERR: Statis:fwriteBareSel failed: batchnum < 0");
+        exit(EXIT_FAILURE);
+    } else if (batchnum >= this->pos) {
+        perror("ERR: Statis:fwriteBareSel failed: batchnum >= num_batch");
+        exit(EXIT_FAILURE);
+    } else {
+        this->batches[batchnum]->fwriteBareSel(&fout, infnum, size);
+    }
+
+    fout.close();
+}
+
 
 
 template <typename Dtype>

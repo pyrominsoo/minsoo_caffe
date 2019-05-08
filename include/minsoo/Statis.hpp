@@ -115,6 +115,8 @@ class Batch {
         void printAll(void);
         void fwriteAll(std::ofstream* file);
         void fwriteBare(std::ofstream* file);
+        void fwriteBareOne(std::ofstream* file, int infnum);
+        void fwriteBareSel(std::ofstream* file, int infnum[], int size);
         void fwriteSimple(std::ofstream* file);
 
     private:
@@ -144,6 +146,8 @@ class Statis {
         void printAll(void);
         void fwriteAll(const char* filename);
         void fwriteBare(const char* filename);
+        void fwriteBareOne(const char* filename, int batchnum, int infnum);
+        void fwriteBareSel(const char* filename, int batchnum, int infnum[], int size);
         void fwriteSimple(const char* filename);
 
     private:
