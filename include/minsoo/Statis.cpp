@@ -1105,7 +1105,6 @@ void Statis<Dtype>::fwriteBareOne(const char* filename, int batchnum, int infnum
 
 template <typename Dtype>
 void Statis<Dtype>::fwriteBareSel(const char* filename, int batchnum, int infnum[], int size) {
-    int i;
 
     std::ofstream fout;
     fout.open(filename, std::ios::out);
