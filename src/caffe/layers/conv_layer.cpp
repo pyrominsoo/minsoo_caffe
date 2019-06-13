@@ -16,7 +16,7 @@ Statis<float>* statis;
 Batch<float>* batch;
 int batch_size = 50;
 int num_clayer = 151;
-int num_ilayer = 1;
+int num_ilayer = 10;
 
 namespace caffe {
 
