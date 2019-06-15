@@ -1,0 +1,15 @@
+net: "models/resnet18/train.prototxt"
+test_iter: 100
+test_interval: 500
+base_lr: 0.05
+display: 20
+lr_policy: "poly"
+max_iter: 650000
+power: 1
+momentum: 0.9
+weight_decay: 0.0005
+snapshot: 5000
+snapshot_prefix: "models/resnet18/resnet18"
+random_seed: 0
+test_initialization: false
+solver_mode: CPU
