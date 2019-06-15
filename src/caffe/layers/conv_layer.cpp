@@ -15,7 +15,7 @@ int dump_layer(0);
 Statis<float>* statis;
 Batch<float>* batch;
 int batch_size = 50;
-int num_clayer = 151;
+int num_clayer = 170;
 int num_ilayer = 10;
 
 namespace caffe {
