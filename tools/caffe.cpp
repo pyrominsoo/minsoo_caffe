@@ -384,8 +384,9 @@ int test() {
 
   if (statis_on) {
     // MINSOO Print out and delete statis
-    int inf_sel[] = {2,10,22,27,33,49};//{35, 44, 46};
-    statis->fwriteBareSel((char*)"winner.log", 0, inf_sel, 6);
+    //int inf_sel[] = {2,10,22,27,33,49};//{35, 44, 46};
+    //statis->fwriteBareSel((char*)"winner.log", 0, inf_sel, 6);
+    statis->fwriteBare((char*)"winner.log");
     delete statis;
   }
 
