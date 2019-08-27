@@ -7,14 +7,96 @@
 
 #include "caffe/common.hpp"
 #include "caffe/util/math_functions.hpp"
+#include "hyunjin/define.hpp"
+#include "hyunjin/custom_maths.cuh"
+// for generate random number
+#include <time.h>
+#include "minsoo/fixed.hpp"
+
+// global variables
+//_MODE_TYPE   mult_type;         // multiplier mode
+extern unsigned int mult_type;         // multiplier mode
+unsigned int allnumbits;        // #all bits in format 
+unsigned int mantissa_numbits;  // #mantissa bits in format
+unsigned int fixed_numbits;     // #fixed width in format
+//unsigned int stage1_k;          // #MSBs in mantissa of first stage 
+//unsigned int stage2_k;          // #MSBs in mantissa of second stage 
+//unsigned int stage3_k;          // #MSBs in mantissa of third stage 
+//_RMODE_TYPE  stage1_rmode;      // rounding mode in first stage 
+//_RMODE_TYPE  stage2_rmode;      // rounding mode in second stage 
+//_RMODE_TYPE  stage3_rmode;      // rounding mode in third stage 
+//_RMODE_TYPE  acc_rmode;         // rounding mode after accumulation
+
+//_DMODE_TYPE  data_mode;         // data mode of logarithmic representation
+//unsigned int numbitssampling;   // 2 ^ numbitssampling in logarithmic stochastic rounding 
+//unsigned int numbits_lsr;       // bits used as weights in logarithmic stochastic rounding 
+
+#define BLOCK_SIZE 32
+#define DRUM_K 4
+#define FRACBITS 16 
+#include <cstddef> 
 
 namespace caffe {
+//{{{
+//template <>
+//void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
+//    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+//    const float alpha, const float* A, const float* B, const float beta,
+//    float* C) {
+//  // Note that cublas follows fortran order.
+//  int lda = (TransA == CblasNoTrans) ? K : M;
+//  int ldb = (TransB == CblasNoTrans) ? N : K;
+//  cublasOperation_t cuTransA =
+//      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+//  cublasOperation_t cuTransB =
+//      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+//  CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+//      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+//}
+//
+//template <>
+//void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
+//    const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+//    const double alpha, const double* A, const double* B, const double beta,
+//    double* C) {
+//  // Note that cublas follows fortran order.
+//  int lda = (TransA == CblasNoTrans) ? K : M;
+//  int ldb = (TransB == CblasNoTrans) ? N : K;
+//  cublasOperation_t cuTransA =
+//      (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+//  cublasOperation_t cuTransB =
+//      (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
+//  CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+//      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+//}
+//
+//template <>
+//void caffe_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
+//    const int N, const float alpha, const float* A, const float* x,
+//    const float beta, float* y) {
+//  cublasOperation_t cuTransA =
+//      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
+//  CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+//      A, N, x, 1, &beta, y, 1));
+//}
+//
+//template <>
+//void caffe_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
+//    const int N, const double alpha, const double* A, const double* x,
+//    const double beta, double* y) {
+//  cublasOperation_t cuTransA =
+//      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
+//  CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+//      A, N, x, 1, &beta, y, 1));
+//}
+//}}}
 
 template <>
 void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const float alpha, const float* A, const float* B, const float beta,
     float* C) {
+//{{{
   // Note that cublas follows fortran order.
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
@@ -22,15 +104,85 @@ void caffe_gpu_gemm<float>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+
+  if (mult_type == 1) // FLOAT
+  {
+    CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+        N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+    return;
+  }
+
+  // memory for storing results 
+  float *dop_A;
+  cudaMalloc((void **)&dop_A, sizeof(float) * M * K);
+
+  float *dop_B;
+  cudaMalloc((void **)&dop_B, sizeof(float) * K * N);
+
+  const float alpha_scale = 1;
+  const float beta_scale = 0;
+
+  // check transposition and scaling 
+  CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), cuTransA, cuTransA,
+      K, M, &alpha_scale, A, lda, &beta_scale, A, lda, dop_A, K));
+ 
+//  // check transposition and scaling 
+  CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), cuTransB, cuTransB,
+      N, K, &alpha_scale, B, ldb, &beta_scale, B, ldb, dop_B, N));
+
+  // calling matrix multiplication kernal
+
+  dim3 threadsPerBlock(M, N); // x, y
+  dim3 blocksPerGrid(1, 1);
+  if (N*M > BLOCK_SIZE*BLOCK_SIZE)
+  {
+    threadsPerBlock.x = BLOCK_SIZE;
+    threadsPerBlock.y = BLOCK_SIZE;
+    blocksPerGrid.x = ceil(double(M)/double(threadsPerBlock.x));
+    blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
+  }
+
+  switch (mult_type) 
+  {
+    case 2: // FIXED
+      fixed_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, stage1_rmode, acc_rmode,
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case 8://MITCHK_UNBIAS_C1_F:
+      mitchk_unbias_c1_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case 7::
+      mitchk_unbias_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    default :
+      std::cout << "undefined mult_type: " << mult_type << std::endl;
+      exit(1);
+    break;
+  }
+
+  cudaDeviceSynchronize();
+
+  // free memory
+  cudaFree(dop_A);
+  cudaFree(dop_B);
+
+  return;
 }
+//}}}
+
 
 template <>
 void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
     const double alpha, const double* A, const double* B, const double beta,
     double* C) {
+//{{{
+
   // Note that cublas follows fortran order.
   int lda = (TransA == CblasNoTrans) ? K : M;
   int ldb = (TransB == CblasNoTrans) ? N : K;
@@ -38,39 +190,303 @@ void caffe_gpu_gemm<double>(const CBLAS_TRANSPOSE TransA,
       (TransA == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
-  CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
-      N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+
+  if (mult_type == 1) // FLOAT
+  {
+    CUBLAS_CHECK(cublasDgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
+        N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
+    return;
+  }
+
+  // memory for storing results 
+  double  *dop_A;
+  cudaMalloc((void **)&dop_A, sizeof(double ) * M * K);
+
+  double  *dop_B;
+  cudaMalloc((void **)&dop_B, sizeof(double ) * K * N);
+
+  const double alpha_scale = 1;
+  const double  beta_scale = 0;
+
+  // check transposition and scaling 
+  CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), cuTransA, cuTransA,
+      K, M, &alpha_scale, A, lda, &beta_scale, A, lda, dop_A, K));
+ 
+  // check transposition and scaling 
+  CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), cuTransB, cuTransB,
+      N, K, &alpha_scale, B, ldb, &beta_scale, B, ldb, dop_B, N));
+
+  // calling matrix multiplication kernal
+  dim3 threadsPerBlock(M, N); // x, y
+  dim3 blocksPerGrid(1, 1);
+  if (N*M > BLOCK_SIZE*BLOCK_SIZE)
+  {
+    threadsPerBlock.x = BLOCK_SIZE;
+    threadsPerBlock.y = BLOCK_SIZE;
+    blocksPerGrid.x = ceil(double(M)/double(threadsPerBlock.x));
+    blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
+  }
+
+  switch (mult_type) 
+  {
+    case 2: //FIXED:
+      fixed_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, stage1_rmode, acc_rmode,
+         allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case 8: //MITCHK_UNBIAS_C1_F:
+      mitchk_unbias_c1_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case 7: //MITCHK_UNBIAS_F:
+      mitchk_unbias_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    default :
+      std::cout << "undefined mult_type: " << mult_type << std::endl;
+      exit(1);
+      break;
+  }
+
+  cudaDeviceSynchronize();
+
+  // free memory
+  cudaFree(dop_A);
+  cudaFree(dop_B);
+
+  return;
 }
+//}}}
+
 
 template <>
 void caffe_gpu_gemv<float>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const float alpha, const float* A, const float* x,
     const float beta, float* y) {
+//{{{
   cublasOperation_t cuTransA =
-      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+    (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
+
+  if (mult_type == 1) // float
+  {
+    CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
       A, N, x, 1, &beta, y, 1));
+    return;
+  }
+
+  // memory for storing results 
+  float *dop_A;
+  float *dop_B;
+  cudaMalloc((void **)&dop_A, sizeof(float) * M * N);
+
+  if (TransA == CblasTrans) 
+    cudaMalloc((void **) &dop_B, sizeof(float)*M);
+  else if (TransA == CblasNoTrans) 
+    cudaMalloc((void **) &dop_B, sizeof(float)*N);
+
+  //int lda = (TransA == CblasNoTrans) ? M : N;
+
+  const float alpha_scale = 1;
+  const float beta_scale = 0;
+
+  // check transposition and scaling 
+  CUBLAS_CHECK(cublasSgeam(Caffe::cublas_handle(), cuTransA, cuTransA,
+      M, N, &alpha_scale, A, N, &beta_scale, A, N, dop_A, M));
+
+  if (TransA == CblasTrans) 
+  {
+    CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), M, x, 1, dop_B, 1));
+    CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), M, &alpha_scale, dop_B, 1));
+  }
+  else if (TransA == CblasNoTrans) 
+  {
+    CUBLAS_CHECK(cublasScopy(Caffe::cublas_handle(), N, x, 1, dop_B, 1));
+    CUBLAS_CHECK(cublasSscal(Caffe::cublas_handle(), N, &alpha_scale, dop_B, 1));
+  }
+
+  unsigned int row, col;
+  if (TransA == CblasTrans) 
+  {
+    col = 1;
+    row = N;
+  }
+  else if (TransA == CblasNoTrans) 
+  {
+    col = 1;
+    row = M;
+  }
+
+  // calling matrix multiplication kernal
+  dim3 threadsPerBlock(col, row); // x, y
+  dim3 blocksPerGrid(1, 1);
+  if (col*row > BLOCK_SIZE*BLOCK_SIZE)
+  {
+    threadsPerBlock.x = BLOCK_SIZE;
+    threadsPerBlock.y = BLOCK_SIZE;
+    blocksPerGrid.x = ceil(double(col)/double(threadsPerBlock.x));
+    blocksPerGrid.y = ceil(double(row)/double(threadsPerBlock.y));
+  }
+ 
+  switch (mult_type) 
+  {
+    case 2: //FIXED:
+      fixed_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_rmode, acc_rmode,
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case MITCHK_UNBIAS_C1_F:
+      mitchk_unbias_c1_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case MITCHK_UNBIAS_F:
+      mitchk_unbias_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case MULTI_LSR:
+      srand(time(NULL));
+      multi_lsr_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_rmode, acc_rmode, 
+         data_mode, numbitssampling, numbits_lsr, rand(), alpha, beta);   
+      break;
+
+    default :
+      std::cout << "undefined mult_type: " << mult_type << std::endl;
+      exit(1);
+     break;
+  }
+
+  cudaDeviceSynchronize();
+  // free memory
+  cudaFree(dop_A);
+  cudaFree(dop_B);
+  
+  return;
 }
+//}}}
 
 template <>
 void caffe_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
     const int N, const double alpha, const double* A, const double* x,
     const double beta, double* y) {
+//{{{
   cublasOperation_t cuTransA =
-      (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
-  CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
-      A, N, x, 1, &beta, y, 1));
-}
+    (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
 
+   if (mult_type == FLOAT)
+  {
+    CUBLAS_CHECK(cublasDgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
+      A, N, x, 1, &beta, y, 1));
+    return;
+  }
+
+  // memory for storing results 
+  double *dop_A;
+  double *dop_B;
+  cudaMalloc((void **)&dop_A, sizeof(double) * M * N);
+
+  if (TransA == CblasTrans) 
+    cudaMalloc((void **) &dop_B, sizeof(double)*M);
+  else if (TransA == CblasNoTrans) 
+    cudaMalloc((void **) &dop_B, sizeof(double)*N);
+
+  //int lda = (TransA == CblasNoTrans) ? M : N;
+
+  const double alpha_scale = 1;
+  const double beta_scale = 0;
+
+  // check transposition and scaling 
+  CUBLAS_CHECK(cublasDgeam(Caffe::cublas_handle(), cuTransA, cuTransA,
+      M, N, &alpha_scale, A, N, &beta_scale, A, N, dop_A, M));
+
+  if (TransA == CblasTrans) 
+  {
+    CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), M, x, 1, dop_B, 1));
+    CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), M, &alpha_scale, dop_B, 1));
+  }
+  else if (TransA == CblasNoTrans) 
+  {
+    CUBLAS_CHECK(cublasDcopy(Caffe::cublas_handle(), N, x, 1, dop_B, 1));
+    CUBLAS_CHECK(cublasDscal(Caffe::cublas_handle(), N, &alpha_scale, dop_B, 1));
+  }
+  
+  unsigned int row, col;
+  if (TransA == CblasTrans) 
+  {
+    col = 1;
+    row = N;
+  }
+  else if (TransA == CblasNoTrans) 
+  {
+    col = 1;
+    row = M;
+  }
+
+  // calling matrix multiplication kernal
+  dim3 threadsPerBlock(col, row); // x, y
+  dim3 blocksPerGrid(1, 1);
+  if (col*row > BLOCK_SIZE*BLOCK_SIZE)
+  {
+    threadsPerBlock.x = BLOCK_SIZE;
+    threadsPerBlock.y = BLOCK_SIZE;
+    blocksPerGrid.x = ceil(double(col)/double(threadsPerBlock.x));
+    blocksPerGrid.y = ceil(double(row)/double(threadsPerBlock.y));
+  }
+ 
+  switch (mult_type) 
+  {
+    case FIXED:
+      fixed_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_rmode, acc_rmode,
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case MITCHK_UNBIAS_C1_F:
+      mitchk_unbias_c1_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+    case MITCHK_UNBIAS_F:
+      mitchk_unbias_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_k, stage1_rmode, acc_rmode, 
+        allnumbits, mantissa_numbits, fixed_numbits, alpha, beta);   
+      break;
+
+    case MULTI_LSR:
+      multi_lsr_d<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_A, dop_B, y, row, col, N, stage1_rmode, acc_rmode, 
+         data_mode, numbitssampling, numbits_lsr, rand(), alpha, beta);   
+      break;
+
+    default :
+      std::cout << "undefined mult_type: " << mult_type << std::endl;
+      exit(1);
+     break;
+  }
+
+  cudaDeviceSynchronize();
+  // free memory
+  cudaFree(dop_A);
+  cudaFree(dop_B);
+  
+  return;
+}
+//}}}
+
+//{{{
 template <>
 void caffe_gpu_axpy<float>(const int N, const float alpha, const float* X,
     float* Y) {
+
   CUBLAS_CHECK(cublasSaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
 template <>
 void caffe_gpu_axpy<double>(const int N, const double alpha, const double* X,
     double* Y) {
+
   CUBLAS_CHECK(cublasDaxpy(Caffe::cublas_handle(), N, &alpha, X, 1, Y, 1));
 }
 
@@ -387,6 +803,30 @@ void caffe_gpu_powx<double>(const int N, const double* a,
       N, a, alpha, y);
 }
 
+template <typename Dtype>
+__global__ void sqrt_kernel(const int n, const Dtype* a, Dtype* y) {
+  CUDA_KERNEL_LOOP(index, n) {
+    y[index] = sqrt(a[index]);
+  }
+}
+
+/*
+template <>
+void caffe_gpu_sqrt<float>(const int N, const float* a, float* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  sqrt_kernel<float><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, y);
+}
+
+template <>
+void caffe_gpu_sqrt<double>(const int N, const double* a, double* y) {
+  // NOLINT_NEXT_LINE(whitespace/operators)
+  sqrt_kernel<double><<<CAFFE_GET_BLOCKS(N), CAFFE_CUDA_NUM_THREADS>>>(
+      N, a, y);
+}
+*/
+
+
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sign, y[index] = (Dtype(0) < x[index])
                                       - (x[index] < Dtype(0)));
 DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(sgnbit, y[index] = signbit(x[index]));
@@ -434,5 +874,5 @@ void caffe_gpu_rng_gaussian(const int n, const double mu, const double sigma,
   CURAND_CHECK(
       curandGenerateNormalDouble(Caffe::curand_generator(), r, n, mu, sigma));
 }
-
+//}}}
 }  // namespace caffe
