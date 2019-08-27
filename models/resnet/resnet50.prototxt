@@ -33,10 +33,10 @@ layer {
     mirror: false
     crop_size: 224
     #mean_file: "models/resnet/ResNet_mean.binaryproto"
-    mean_file: "data/ilsvrc12/imagenet_mean.binaryproto"
+    mean_file: "/home/pyrominsoo/Caffe/data/ilsvrc12/imagenet_mean.binaryproto"
   }
   data_param {
-    source: "examples/imagenet/ilsvrc12_val_lmdb"
+    source: "/home/pyrominsoo/Caffe/examples/imagenet/ilsvrc12_val_lmdb"
     batch_size: 50
     backend: LMDB
   }
