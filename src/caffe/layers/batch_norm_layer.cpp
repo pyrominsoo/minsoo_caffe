@@ -105,20 +105,20 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         this->blobs_[1]->cpu_data(), variance_.mutable_cpu_data());
   } else {
     // compute mean
-    minsoo_gemv_special1<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
+    caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
         1. / (num * spatial_dim), bottom_data,
         spatial_sum_multiplier_.cpu_data(), 0.,
         num_by_chans_.mutable_cpu_data());
-    minsoo_gemv_special1<Dtype>(CblasTrans, num, channels_, 1.,
+    caffe_cpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
         num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
         mean_.mutable_cpu_data());
   }
 
   // subtract mean
-  minsoo_gemm_special1<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
       batch_sum_multiplier_.cpu_data(), mean_.cpu_data(), 0.,
       num_by_chans_.mutable_cpu_data());
-  minsoo_gemm_special1<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, -1, num_by_chans_.cpu_data(),
       spatial_sum_multiplier_.cpu_data(), 1., top_data);
 
@@ -126,11 +126,11 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // compute variance using var(X) = E((X-EX)^2)
     caffe_powx(top[0]->count(), top_data, Dtype(2),
         temp_.mutable_cpu_data());  // (X-EX)^2
-    minsoo_gemv_special1<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
+    caffe_cpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,
         1. / (num * spatial_dim), temp_.cpu_data(),
         spatial_sum_multiplier_.cpu_data(), 0.,
         num_by_chans_.mutable_cpu_data());
-    minsoo_gemv_special1<Dtype>(CblasTrans, num, channels_, 1.,
+    caffe_cpu_gemv<Dtype>(CblasTrans, num, channels_, 1.,
         num_by_chans_.cpu_data(), batch_sum_multiplier_.cpu_data(), 0.,
         variance_.mutable_cpu_data());  // E((X_EX)^2)
 
@@ -152,10 +152,10 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
              variance_.mutable_cpu_data());
 
   // replicate variance to input size
-  minsoo_gemm_special1<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, num, channels_, 1, 1,
       batch_sum_multiplier_.cpu_data(), variance_.cpu_data(), 0.,
       num_by_chans_.mutable_cpu_data());
-  minsoo_gemm_special1<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
+  caffe_cpu_gemm<Dtype>(CblasNoTrans, CblasNoTrans, channels_ * num,
       spatial_dim, 1, 1., num_by_chans_.cpu_data(),
       spatial_sum_multiplier_.cpu_data(), 0., temp_.mutable_cpu_data());
   caffe_div(temp_.count(), top_data, temp_.cpu_data(), top_data);
