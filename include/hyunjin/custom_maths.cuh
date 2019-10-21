@@ -810,9 +810,13 @@ __global__ void mitchk_c1_f(
         dopB = B & maskAB;
       }
 
-      // MINSOO : zero check after conversion is necessary
-      if ((dopA == 0) || (dopB == 0))
-        continue;
+      // MINSOO : match the behavior to verilog code
+      if (dopA == 0) {
+        dopA = 1;
+      }
+      if (dopB == 0) {
+        dopB = 1;
+      }
 
       // 32bit fixed-point format is assumed
       // MINSOO : changed 32 to _allnumbits
@@ -990,9 +994,13 @@ __global__ void mitchk_unbias_c1_f(
         dopB = B & maskAB;
       }
 
-      // MINSOO : zero check after conversion is necessary
-      if ((dopA == 0) || (dopB == 0))
-        continue;
+      // MINSOO : match the behavior to verilog code
+      if (dopA == 0) {
+        dopA = 1;
+      }
+      if (dopB == 0) {
+        dopB = 1;
+      }
 
       // 32bit fixed-point format is assumed
       // MINSOO : changed 32 to _allnumbits
