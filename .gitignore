@@ -121,3 +121,5 @@ log_list
 
 #others
 tags
+params
+*.acc
