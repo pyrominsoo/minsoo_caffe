@@ -4,6 +4,10 @@
 #include "caffe/layers/batch_norm_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+extern float batnorm_meanscale;
+extern float batnorm_variscale;
+
+
 namespace caffe {
 
 template <typename Dtype>
@@ -21,12 +25,14 @@ void BatchNormLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
 
   if (use_global_stats_) {
     // use the stored mean/variance estimates.
+    //MINSOO scale the mean and variance for approx multipliers
     const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
         0 : 1 / this->blobs_[2]->cpu_data()[0];
-    caffe_gpu_scale(variance_.count(), scale_factor,
+    caffe_gpu_scale(variance_.count(), scale_factor * (Dtype)batnorm_meanscale,  // MINSOO scaled for approx
         this->blobs_[0]->gpu_data(), mean_.mutable_gpu_data());
-    caffe_gpu_scale(variance_.count(), scale_factor,
+    caffe_gpu_scale(variance_.count(), scale_factor * (Dtype)batnorm_variscale, // MINSOO scaled for approx
         this->blobs_[1]->gpu_data(), variance_.mutable_gpu_data());
+
   } else {
     // compute mean
     caffe_gpu_gemv<Dtype>(CblasNoTrans, channels_ * num, spatial_dim,

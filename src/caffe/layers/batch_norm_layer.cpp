@@ -4,6 +4,9 @@
 #include "caffe/layers/batch_norm_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
+extern float batnorm_meanscale;
+extern float batnorm_variscale;
+
 namespace caffe {
 
 template <typename Dtype>
@@ -99,9 +102,9 @@ void BatchNormLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     // use the stored mean/variance estimates.
     const Dtype scale_factor = this->blobs_[2]->cpu_data()[0] == 0 ?
         0 : 1 / this->blobs_[2]->cpu_data()[0];
-    caffe_cpu_scale(variance_.count(), scale_factor,
+    caffe_cpu_scale(variance_.count(), scale_factor * (Dtype)batnorm_meanscale,
         this->blobs_[0]->cpu_data(), mean_.mutable_cpu_data());
-    caffe_cpu_scale(variance_.count(), scale_factor,
+    caffe_cpu_scale(variance_.count(), scale_factor * (Dtype)batnorm_variscale,
         this->blobs_[1]->cpu_data(), variance_.mutable_cpu_data());
   } else {
     // compute mean

@@ -29,6 +29,9 @@ extern int num_ilayer;
 extern unsigned int mult_type;
 // K value for drum
 extern unsigned int drum_k;
+// batnorm scale
+float batnorm_meanscale;
+float batnorm_variscale;
  
 using caffe::Blob;
 using caffe::Caffe;
@@ -312,29 +315,90 @@ int test() {
   vector<float> test_score;
   float loss = 0;
 
-  // MINSOOO prepare mult type
-  std::ifstream current_mult;
+
+  int fix_batnorm;
+  // MINSOO read runtime parameters
+  std::ifstream params;
   string string_in;
-  current_mult.open("current_mult");
-  if (!current_mult) {
+  params.open("params");
+  if (!params) {
     std::cout << "Unable to open current_mult";
     exit(1);
   }
-  current_mult >> string_in;
+  params >> string_in;
   mult_type = stoi(string_in);
-  current_mult.close();
-
-  // MINSOO prepare DRUM K value
-  std::ifstream k_input;
-  k_input.open("DRUM_K");
-  if (!k_input) {
-    std::cout << "Unable to open DRUM_K";
-    exit(1);
-  }
-  k_input >> string_in;
+  params >> string_in;
   drum_k = stoi(string_in);
-  k_input.close();
+  params >> string_in;
+  fix_batnorm = stoi(string_in);
 
+  // MINSOO prepare mult type
+  // std::ifstream current_mult;
+  // string string_in;
+  // current_mult.open("current_mult");
+  // if (!current_mult) {
+  //   std::cout << "Unable to open current_mult";
+  //   exit(1);
+  // }
+  // current_mult >> string_in;
+  // mult_type = stoi(string_in);
+  // current_mult.close();
+  //
+  // // MINSOO prepare DRUM K value
+  // std::ifstream k_input;
+  // k_input.open("DRUM_K");
+  // if (!k_input) {
+  //   std::cout << "Unable to open DRUM_K";
+  //   exit(1);
+  // }
+  // k_input >> string_in;
+  // drum_k = stoi(string_in);
+  // k_input.close();
+
+  // MINSOO setup batch norm parameter scaling
+  if (!fix_batnorm) {
+    batnorm_meanscale = 1.0;
+    batnorm_variscale = 1.0;
+  } else {
+    switch (mult_type) {
+      case 1: // Float
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break;
+      case 2: // fixed
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break;
+      case 4: // iterlog2
+        batnorm_meanscale = 0.99;
+        batnorm_variscale = 0.9801;
+        break; 
+      case 5: // drum
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break; 
+      case 6: // mitchk
+        batnorm_meanscale = 0.96;
+        batnorm_variscale = 0.9216;
+        break; 
+      case 7: // mitchk_unbias
+        batnorm_meanscale = 1.004;
+        batnorm_variscale = 1.008016;
+        break; 
+      case 8: // mitchk_unbias_c1
+        batnorm_meanscale = 1.004;
+        batnorm_variscale = 1.008016;
+        break; 
+      case 10: // mitchk_c1
+        batnorm_meanscale = 0.96;
+        batnorm_variscale = 0.9216;
+        break; 
+      default:
+        std::cout << "undefined mult_type: " << mult_type << std::endl;
+        exit(1);
+        break;
+    }
+  }
 
   // MINSOO Prepare Statis
   statis_on = false;
