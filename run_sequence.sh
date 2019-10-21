@@ -1,24 +1,20 @@
 echo "1" > current_mult;
-./test_resnet50.sh 2> float_20190820.acc;
-mv winner.log float.log
+./test_resnet152.sh 2> float_20191016.acc;
+echo "4" > current_mult;
+./test_resnet152.sh 2> iterlog2_20191016.acc;
 echo "5" > current_mult;
 echo "6" > DRUM_K;
-./test_resnet50.sh 2> drum6_20190820.acc;
-mv winner.log drum6.log
+./test_resnet152.sh 2> drum6_20191016.acc;
 echo "6" > current_mult;
-echo "7" > DRUM_K;
-./test_resnet50.sh 2> mitchk7_20190820.acc;
-mv winner.log mitchk7.log
+echo "9" > DRUM_K;
+./test_resnet152.sh 2> mitchk9_20191016.acc;
 echo "7" > current_mult;
-echo "7" > DRUM_K;
-./test_resnet50.sh 2> mitchk7_bias_20190820.acc;
-mv winner.log mitchk7_bias.log
+echo "9" > DRUM_K;
+./test_resnet152.sh 2> mitchk9_bias_20191016.acc;
 echo "8" > current_mult;
-echo "7" > DRUM_K;
-./test_resnet50.sh 2> mitchk7_bias_c1_20190820.acc;
-mv winner.log mitchk7_bias_c1.log
+echo "9" > DRUM_K;
+./test_resnet152.sh 2> mitchk9_bias_c1_20191016.acc;
 echo "10" > current_mult;
-echo "7" > DRUM_K;
-./test_resnet50.sh 2> mitchk7_c1_20190820.acc;
-mv winner.log mitchk7_c1.log
+echo "9" > DRUM_K;
+./test_resnet152.sh 2> mitchk9_c1_20191016.acc;
 
