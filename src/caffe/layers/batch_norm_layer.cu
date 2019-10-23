@@ -4,8 +4,8 @@
 #include "caffe/layers/batch_norm_layer.hpp"
 #include "caffe/util/math_functions.hpp"
 
-extern float batnorm_meanscale;
-extern float batnorm_variscale;
+float batnorm_meanscale;
+float batnorm_variscale;
 
 
 namespace caffe {
