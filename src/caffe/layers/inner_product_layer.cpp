@@ -117,10 +117,6 @@ void InnerProductLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   if (statis_on) {
     static int count_ip = 0;
     
-    if (M_ != batch_size) {
-        perror("inner_product_layer.cpp:108: M_ != batch_size");
-        exit(EXIT_FAILURE);
-    }
     for (int row = 0; row < M_; row++) {
         Infer<float>* curr_infer = batch->returnInfer(row);
         IPLayer<float>* layer = new IPLayer<float>(count_ip, N_);
