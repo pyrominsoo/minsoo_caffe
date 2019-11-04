@@ -35,6 +35,78 @@
 
 __device__ unsigned int xorshift( unsigned int _state);
 
+__device__ void float2bfloat(const float src, float& dst) {
+	const uint16_t* p = reinterpret_cast<const uint16_t*>(&src);
+	uint16_t* q = reinterpret_cast<uint16_t*>(&dst);
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  q[0] = p[0];
+  q[1] = 0;
+#else
+	q[0] = 0;
+	q[1] = p[1];
+#endif
+}
+	
+
+/* #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
+    /* return *reinterpret_cast<float*>( */
+    /*     reinterpret_cast<uint16_t*>(&float_val)); */
+/* #else */
+/*     return *reinterpret_cast<float*>( */
+/*         &(reinterpret_cast<uint16_t*>(&float_val)[1])); */
+/* #endif */
+
+
+
+__global__ void mult_bfloat16(
+                  const float*_op_A, const float*_op_B, float* _C, 
+                  unsigned int _M, unsigned int _N, unsigned int _K,
+                  unsigned int _drum_k, 
+                  unsigned int _allnumbits, unsigned int _mantissa_numbits, 
+                  const float _alpha, const float _beta)
+{
+//{{{
+  unsigned int row =  blockIdx.y*blockDim.y + threadIdx.y;
+  unsigned int col =  blockIdx.x*blockDim.x + threadIdx.x ;
+ 
+  // check & conversion for negativeness, zero, and leading one 
+  if(row < _M && col < _N) 
+  {
+    double sum = 0;
+    for (int i = 0; i < _K; i++)
+    {
+			float A = _op_A[i * _M + row];
+			float B = _op_B[_K * col + i];
+			float tempA = 0;
+			float tempB = 0;
+			float2bfloat(A, tempA);
+			float2bfloat(B, tempB);
+			float mult = tempA * tempB;
+			float real_ma_out = 0;
+			float2bfloat(mult,real_ma_out);
+			sum += real_ma_out;
+    } // End of for (int i = 0; i < _K; i++)
+    
+		float accum = sum;
+    accum *= _alpha;
+    float temp = _beta; 
+    temp *= _C[col *_M + row]; // column major order for CUBLAS
+    temp += accum;
+    _C[col*_M + row] = temp;
+     
+  } // End of if(row < _M && col < _N) 
+
+  __syncthreads();
+  
+  return;
+
+}
+//}}}
+
+
+
+
+
 
 
 __global__ void iterlog2_f(

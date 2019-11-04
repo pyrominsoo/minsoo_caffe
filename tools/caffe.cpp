@@ -393,6 +393,10 @@ int test() {
         batnorm_meanscale = 0.96;
         batnorm_variscale = 0.9216;
         break; 
+      case 12: // bfloat16
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break; 
       default:
         std::cout << "undefined mult_type: " << mult_type << std::endl;
         exit(1);

@@ -94,6 +94,8 @@ void caffe_gpu_gemv<double>(const CBLAS_TRANSPOSE TransA, const int M,
 }
 //}}}
 
+
+
 template <>
 void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
     const CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
@@ -113,7 +115,7 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
     CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
         N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
     return;
-  }
+  } 
 
   // memory for storing results 
   float *dop_A;
@@ -179,6 +181,11 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
       break;
     case 10://MITCHK_C1_F:
       mitchk_c1_f<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, drum_k,
+        ALLNUMBITS, FRACBITS,  alpha, beta);   
+      break;
+    case 12: //bfloat16
+      mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
         (dop_B, dop_A, C, N, M, K, drum_k,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
