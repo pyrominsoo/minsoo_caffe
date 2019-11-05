@@ -48,16 +48,6 @@ __device__ void float2bfloat(const float src, float& dst) {
 }
 	
 
-/* #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
-    /* return *reinterpret_cast<float*>( */
-    /*     reinterpret_cast<uint16_t*>(&float_val)); */
-/* #else */
-/*     return *reinterpret_cast<float*>( */
-/*         &(reinterpret_cast<uint16_t*>(&float_val)[1])); */
-/* #endif */
-
-
-
 __global__ void mult_bfloat16(
                   const float*_op_A, const float*_op_B, float* _C, 
                   unsigned int _M, unsigned int _N, unsigned int _K,
@@ -125,11 +115,16 @@ __global__ void iterlog2_f(
     maskAB = maskAB + ((long long int)(1) << index);
   // End of make bit width as _allnumbits
   
-  // MINSOO : modify so that MSBs are truncated as well as LSBs
+  // MINSOO : truncate low and high separately to model fixed-point quantization
   long long int maskout = 0;
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
   }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
+  }
+
  
   // check & conversion for negativeness, zero, and leading one 
   if(row < _M && col < _N) 
@@ -261,6 +256,7 @@ __global__ void iterlog2_f(
 
 			ma_out = temp & maskout; // for 2's comp, this happens before sign conversion
 			// for 1's comp, truncation happens after the sign conversion
+      ma_out = temp & maskhigh;
 
 			float real_ma_out;
 			if ((dopA_neg ^ dopB_neg) != 0) {
@@ -309,6 +305,10 @@ __global__ void drum_f(
   long long int maskout = 0;
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
+  }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
   }
  
   // For unbiasing
@@ -416,6 +416,7 @@ __global__ void drum_f(
 		
 			ma_out = ma_out & maskout; // for 2's comp, this happens before sign conversion
 			// for 1's comp, truncation happens after the sign conversion
+      ma_out = ma_out & maskhigh;
 
 			float real_ma_out;
 			if ((dopA_neg ^ dopB_neg) != 0) {
@@ -465,6 +466,10 @@ __global__ void mitchk_unbias_f(
   long long int maskout = 0;
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
+  }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
   }
  
   // For unbiasing
@@ -611,6 +616,7 @@ __global__ void mitchk_unbias_f(
 		
 			ma_out = ma_out & maskout; // for 2's comp, this happens before sign conversion
 			// for 1's comp, truncation happens after the sign conversion
+      ma_out = ma_out & maskhigh;
 
 			float real_ma_out;
 			if ((dopA_neg ^ dopB_neg) != 0) {
@@ -658,6 +664,10 @@ __global__ void mitchk_f(
   long long int maskout = 0;
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
+  }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
   }
   
 
@@ -779,6 +789,7 @@ __global__ void mitchk_f(
 		
 			ma_out = ma_out & maskout; // for 2's comp, this happens before sign conversion
 			// for 1's comp, truncation happens after the sign conversion
+      ma_out = ma_out & maskhigh;
 
 			float real_ma_out;
 			if ((dopA_neg ^ dopB_neg) != 0) {
@@ -827,6 +838,10 @@ __global__ void mitchk_c1_f(
   long long int maskout = 0;
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
+  }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
   }
   
 
@@ -953,7 +968,9 @@ __global__ void mitchk_c1_f(
 					ma_out = ((temp + (1 << _drum_k)) >> (_drum_k - (dopA_lod + dopB_lod)));
 				}
 			}
-			
+		
+      ma_out = ma_out & maskhigh;
+
 
 			float real_ma_out;
 			if ((dopA_neg ^ dopB_neg) == 0) {
@@ -1004,6 +1021,10 @@ __global__ void mitchk_unbias_c1_f(
   long long int maskout = 0;
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
+  }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
   }
  
   long long int maskdrum = 1;
@@ -1151,7 +1172,8 @@ __global__ void mitchk_unbias_c1_f(
 					ma_out = ((temp + (1 << _drum_k)) >> (_drum_k - (dopA_lod + dopB_lod)));
 				}
 			}
-			
+		
+      ma_out = ma_out & maskhigh;
 
 			float real_ma_out;
 			if ((dopA_neg ^ dopB_neg) == 0) {
@@ -1219,51 +1241,51 @@ __global__ void fixed_f(
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
   }
+  long long int maskhigh = exp2f(_mantissa_numbits+_allnumbits);
 
   // check & conversion for negativeness, zero, and leading one 
   if(row < _M && col < _N) 
   {
 		long long int dopA;
 		long long int dopB;
-		int dopA_neg;
-		int dopB_neg;
 
     double sum = 0;
     for (int i = 0; i < _K; i++)
     {
       long long int A = __float2ll_rd(_op_A[i * _M + row] * exp2f(_mantissa_numbits)); 
       long long int B = __float2ll_rd(_op_B[_K * col + i] * exp2f(_mantissa_numbits));
-     if (A < 0) 
-      {
-        dopA_neg = 1;
-        dopA = -A & maskAB;
-      }
-      else
-      {
-        dopA_neg = 0;
-        dopA = A & maskAB;
-      }
+     /* if (A < 0)  */
+     /*  { */
+     /*    dopA_neg = 1; */
+     /*    dopA = -A & maskAB; */
+     /*  } */
+     /*  else */
+     /*  { */
+     /*    dopA_neg = 0; */
+     /*    dopA = A & maskAB; */
+     /*  } */
+     /*  */
+     /*  if (B < 0) */
+     /*  {  */
+     /*    dopB_neg = 1; */
+     /*    dopB = -B & maskAB; */
+     /*  } */
+     /*  else */
+     /*  { */
+     /*    dopB_neg = 0; */
+     /*    dopB = B & maskAB; */
+     /*  } */
 
-      if (B < 0)
-      { 
-        dopB_neg = 1;
-        dopB = -B & maskAB;
-      }
-      else
-      {
-        dopB_neg = 0;
-        dopB = B & maskAB;
-      }
+      dopA = A & maskAB;
+      dopB = B & maskAB;
 
       long long int temp = dopA * dopB; 
 
       temp = temp & maskout;
+      temp = temp % maskhigh;
     
       float real_fixed_out;
-      if (dopA_neg ^ dopB_neg == 0)
-        real_fixed_out = __ll2float_rd(temp) / exp2f(_mantissa_numbits* 2);
-      else
-        real_fixed_out = __ll2float_rd(-temp) / exp2f(_mantissa_numbits* 2);
+      real_fixed_out = __ll2float_rd(temp) / exp2f(_mantissa_numbits* 2);
       sum += real_fixed_out; 
     } // End of for (int i = 0; i < _K; i++)
     float accum = sum;
@@ -1309,51 +1331,30 @@ __global__ void fixed_d(
   for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
     maskout = maskout + ((long long int)(1) << index);
   }
+  long long int maskhigh = exp2f(_mantissa_numbits+_allnumbits);
 
   // check & conversion for negativeness, zero, and leading one 
   if(row < _M && col < _N) 
   {
 		long long int dopA;
 		long long int dopB;
-		int dopA_neg;
-		int dopB_neg;
 
     double sum = 0;
     for (int i = 0; i < _K; i++)
     {
       long long int A = __double2ll_rd(_op_A[i * _M + row] * exp2f(_mantissa_numbits)); 
       long long int B = __double2ll_rd(_op_B[_K * col + i] * exp2f(_mantissa_numbits));
-     if (A < 0) 
-      {
-        dopA_neg = 1;
-        dopA = -A & maskAB;
-      }
-      else
-      {
-        dopA_neg = 0;
-        dopA = A & maskAB;
-      }
 
-      if (B < 0)
-      { 
-        dopB_neg = 1;
-        dopB = -B & maskAB;
-      }
-      else
-      {
-        dopB_neg = 0;
-        dopB = B & maskAB;
-      }
+      dopA = A & maskAB;
+      dopB = B & maskAB;
 
       long long int temp = dopA * dopB; 
 
       temp = temp & maskout;
+      temp = temp % maskhigh;
 
       double real_fixed_out;
-      if (dopA_neg ^ dopB_neg == 0)
-        real_fixed_out = __ll2double_rd(temp) / exp2f(_mantissa_numbits* 2);
-      else
-        real_fixed_out = __ll2double_rd(-temp) / exp2f(_mantissa_numbits* 2);
+      real_fixed_out = __ll2double_rd(temp) / exp2f(_mantissa_numbits* 2);
       sum += real_fixed_out; 
     } // End of for (int i = 0; i < _K; i++)
     double accum = sum;
