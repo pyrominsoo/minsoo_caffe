@@ -374,8 +374,8 @@ int test() {
         batnorm_variscale = 0.9801;
         break; 
       case 5: // drum
-        batnorm_meanscale = 1.0;
-        batnorm_variscale = 1.0;
+        batnorm_meanscale = 0.9996;
+        batnorm_variscale = 0.99920016;
         break; 
       case 6: // mitchk
         batnorm_meanscale = 0.96;
