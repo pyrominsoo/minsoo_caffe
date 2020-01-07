@@ -102,6 +102,11 @@ void AccuracyLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
             perror("accuracy_layer.cpp:94: j!=0");
             exit(EXIT_FAILURE);
           }
+
+          curr_infer->storeRef(label_value);
+          curr_infer->storePred(bottom_data_vector[0].second, bottom_data_vector[1].second,
+                bottom_data_vector[2].second, bottom_data_vector[3].second, 
+                bottom_data_vector[4].second);
       }
 
       // check if true label is in top k predictions
