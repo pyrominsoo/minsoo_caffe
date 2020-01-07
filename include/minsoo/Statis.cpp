@@ -359,6 +359,10 @@ Infer<Dtype>::Infer(int id, uint max_clayer, uint max_ilayer) {
     this->evaluated = false;
     this->correct = false;
     this->correct5 = false;
+    this->ref = -1;
+    for (int i = 0; i < 5; i++) {
+        this->pred[i] = -1;
+    }
     this->max_clayer = max_clayer;
     this->max_ilayer = max_ilayer;
     this->clayers = new ConvLayer<Dtype>*[max_clayer];
@@ -408,6 +412,21 @@ bool Infer<Dtype>::storeResult5(bool result) {
     }
 }
 
+template <typename Dtype>
+bool Infer<Dtype>::storeRef(int ref) {
+    this->ref = ref;
+    return true;
+}
+
+template <typename Dtype>
+bool Infer<Dtype>::storePred(int pred1, int pred2, int pred3, int pred4, int pred5) {
+    this->pred[0] = pred1;
+    this->pred[1] = pred2;
+    this->pred[2] = pred3;
+    this->pred[3] = pred4;
+    this->pred[4] = pred5;
+    return true;
+}
 
 template <typename Dtype>
 bool Infer<Dtype>::reportResult(void) {
@@ -505,6 +524,12 @@ void Infer<Dtype>::printAll(void) {
     std::cout << "evaluated: " << this->evaluated << std::endl;
     std::cout << "correct: " << this->correct << std::endl;
     std::cout << "correct5: " << this->correct5 << std::endl;
+    std::cout << "ref: " << this->ref << std::endl;
+    std::cout << "pred1: " << this->pred[0] << std::endl;
+    std::cout << "pred2: " << this->pred[1] << std::endl;
+    std::cout << "pred3: " << this->pred[2] << std::endl;
+    std::cout << "pred4: " << this->pred[3] << std::endl;
+    std::cout << "pred5: " << this->pred[4] << std::endl;
     std::cout << "Max_CLayer: " << (int)this->max_clayer << std::endl;
     std::cout << "Max_ILayer: " << (int)this->max_ilayer << std::endl;
     std::cout << "Cpos: " << this->cpos << std::endl;
@@ -536,6 +561,12 @@ void Infer<Dtype>::fwriteAll(std::ofstream* file) {
     (*file) << "evaluated: " << this->evaluated << std::endl;
     (*file) << "correct: " << this->correct << std::endl;
     (*file) << "correct5: " << this->correct5 << std::endl;
+    (*file) << "ref: " << this->ref << std::endl;
+    (*file) << "pred1: " << this->pred[0] << std::endl;
+    (*file) << "pred2: " << this->pred[1] << std::endl;
+    (*file) << "pred3: " << this->pred[2] << std::endl;
+    (*file) << "pred4: " << this->pred[3] << std::endl;
+    (*file) << "pred5: " << this->pred[4] << std::endl;
     (*file) << "Max_CLayer: " << (int)this->max_clayer << std::endl;
     (*file) << "Max_ILayer: " << (int)this->max_ilayer << std::endl;
     (*file) << "Cpos: " << this->cpos << std::endl;
@@ -564,6 +595,12 @@ void Infer<Dtype>::fwriteBare(std::ofstream* file) {
     (*file) << "inf " << this->id << std::endl;
     (*file) << "cor " << this->correct << std::endl;
     (*file) << "cor5 " << this->correct5 << std::endl;
+    (*file) << "ref: " << this->ref << std::endl;
+    (*file) << "pred1: " << this->pred[0] << std::endl;
+    (*file) << "pred2: " << this->pred[1] << std::endl;
+    (*file) << "pred3: " << this->pred[2] << std::endl;
+    (*file) << "pred4: " << this->pred[3] << std::endl;
+    (*file) << "pred5: " << this->pred[4] << std::endl;
     (*file) << "cpos " << this->cpos << std::endl;
     (*file) << "ipos " << this->ipos << std::endl;
 
@@ -588,6 +625,12 @@ void Infer<Dtype>::fwriteSimple(std::ofstream* file) {
     (*file) << "evaluated: " << this->evaluated << std::endl;
     (*file) << "correct: " << this->correct << std::endl;
     (*file) << "correct5: " << this->correct5 << std::endl;
+    (*file) << "ref: " << this->ref << std::endl;
+    (*file) << "pred1: " << this->pred[0] << std::endl;
+    (*file) << "pred2: " << this->pred[1] << std::endl;
+    (*file) << "pred3: " << this->pred[2] << std::endl;
+    (*file) << "pred4: " << this->pred[3] << std::endl;
+    (*file) << "pred5: " << this->pred[4] << std::endl;
     (*file) << "Max_CLayer: " << (int)this->max_clayer << std::endl;
     (*file) << "Max_ILayer: " << (int)this->max_ilayer << std::endl;
     (*file) << "Cpos: " << this->cpos << std::endl;

@@ -73,6 +73,8 @@ class Infer {
         ~Infer();
         bool storeResult(bool result);
         bool storeResult5(bool result);
+        bool storeRef(int ref);
+        bool storePred(int pred1, int pred2, int pred3, int pred4, int pred5);
         bool reportResult(void);
         bool reportResult5(void);
         bool addConvLayer(ConvLayer<Dtype>* clayer);
@@ -91,6 +93,8 @@ class Infer {
         bool evaluated; // correct value valid
         bool correct;   // 0 incorrect, 1 correct
         bool correct5;   // 0 incorrect, 1 correct
+        int ref;
+        int pred[5];
         uint max_clayer;
         uint max_ilayer;
         ConvLayer<Dtype>* *clayers;
