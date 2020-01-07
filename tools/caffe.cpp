@@ -378,20 +378,20 @@ int test() {
         batnorm_variscale = 0.99920016;
         break; 
       case 6: // mitchk
-        batnorm_meanscale = 0.96;
-        batnorm_variscale = 0.9216;
+        batnorm_meanscale = 0.956;
+        batnorm_variscale = 0.913936;
         break; 
       case 7: // mitchk_unbias
-        batnorm_meanscale = 1.004;
-        batnorm_variscale = 1.008016;
+        batnorm_meanscale = 1.0044;
+        batnorm_variscale = 1.00881936;
         break; 
       case 8: // mitchk_unbias_c1
-        batnorm_meanscale = 1.004;
-        batnorm_variscale = 1.008016;
+        batnorm_meanscale = 1.0044;
+        batnorm_variscale = 1.00881936;
         break; 
       case 10: // mitchk_c1
-        batnorm_meanscale = 0.96;
-        batnorm_variscale = 0.9216;
+        batnorm_meanscale = 0.956;
+        batnorm_variscale = 0.913936;
         break; 
       case 12: // bfloat16
         batnorm_meanscale = 1.0;
@@ -453,8 +453,8 @@ int test() {
   if (statis_on) {
     // MINSOO Print out and delete statis
     int inf_sel[] = {2,10,22,27,33};//{35, 44, 46};
-    statis->fwriteBareSel((char*)"winner.log", 0, inf_sel, 5);
-    //statis->fwriteBare((char*)"winner.log");
+    //statis->fwriteBareSel((char*)"winner.log", 0, inf_sel, 5);
+    statis->fwriteBare((char*)"winner.log");
     delete statis;
   }
 
