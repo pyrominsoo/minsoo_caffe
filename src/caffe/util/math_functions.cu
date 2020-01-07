@@ -34,7 +34,6 @@ extern unsigned int drum_k;
 
 #define BLOCK_SIZE 32
 #define DRUM_K 4
-#define FRACBITS 16 
 #define ALLNUMBITS INTBITS+FRACBITS
 #include <cstddef> 
 
