@@ -13,13 +13,13 @@ void InnerProductLayer<Dtype>::Forward_gpu(const vector<Blob<Dtype>*>& bottom,
   Dtype* top_data = top[0]->mutable_gpu_data();
   const Dtype* weight = this->blobs_[0]->gpu_data();
   if (M_ == 1) {
-    caffe_gpu_gemv<Dtype>(CblasNoTrans, N_, K_, (Dtype)1.,
+    caffe_gpu_gemv_approx<Dtype>(CblasNoTrans, N_, K_, (Dtype)1.,
                          weight, bottom_data, (Dtype)0., top_data);
     if (bias_term_)
       caffe_gpu_axpy<Dtype>(N_, bias_multiplier_.cpu_data()[0],
                             this->blobs_[1]->gpu_data(), top_data);
   } else {
-    caffe_gpu_gemm<Dtype>(CblasNoTrans,
+    caffe_gpu_gemm_approx<Dtype>(CblasNoTrans,
                           transpose_ ? CblasNoTrans : CblasTrans,
                           M_, N_, K_, (Dtype)1.,
                           bottom_data, weight, (Dtype)0., top_data);
