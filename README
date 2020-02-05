@@ -1,0 +1,6 @@
+Create a file "params" with 3 numbers.
+mult_type Parameter BatchNormFix
+eg.
+10 5 1
+MitchK_C1 K=5 Yes
+mult_type can be seen in the file "mult_list"
