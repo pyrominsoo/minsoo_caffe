@@ -10,3 +10,5 @@ asm
 mitchk_c1
 mitchk_bias_lg
 bfloat16
+mitchk_c1_new
+arith

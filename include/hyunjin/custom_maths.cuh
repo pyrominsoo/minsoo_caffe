@@ -48,6 +48,534 @@ __device__ void float2bfloat(const float src, float& dst) {
 }
 	
 
+
+
+
+
+__global__ void ma_2stage_c1_f(
+                  const float*_op_A, const float*_op_B, float* _C, 
+                  unsigned int _M, unsigned int _N, unsigned int _K,
+                  unsigned int _k1, unsigned int _k2, 
+                  unsigned int _allnumbits, unsigned int _mantissa_numbits,
+                  const float _alpha, const float _beta)
+{
+//{{{
+  unsigned int row =  blockIdx.y*blockDim.y + threadIdx.y;
+  unsigned int col =  blockIdx.x*blockDim.x + threadIdx.x ;
+  // make bit width as _allnumbits
+  long long int maskAB = 0;
+  for (int index = 0; index < _allnumbits; index++)
+    maskAB = maskAB + ((long long int)1 << index);
+  // End of make bit width as _allnumbits
+
+  // make bit width as 2 *_allnumbits - _fixed_numbits
+  // no fixed-width multiplication: _fixed_numbits = 2 * _allnumbits
+  long long int maskout = 0;
+  for (int index = 0; index < (2 * _allnumbits); index++)
+    maskout = maskout + ((long long int)1 << index);
+  // End of make bit width as 2 * _allnumbits: 2 *_allnumbits - _fixed_numbits
+      
+
+  // check & conversion for negativeness, zero, and leading one 
+  if(row < _M && col < _N) 
+  {
+    long long int dopA;
+    long long int dopB;
+    long long int dopAtrunc;
+    long long int dopBtrunc;
+    int dopA_neg;
+    int dopB_neg;
+    int dopA_lod;
+    int dopB_lod;
+
+#ifdef CDEBUG
+    printf("row: %d, col: %d\n", row, col);
+#endif
+    float sum = 0;
+    for (int i = 0; i < _K; i++)
+    {
+      long long int A = __float2ll_rn(_op_A[i * _M + row] * exp2f(_mantissa_numbits)); 
+      long long int B = __float2ll_rn(_op_B[_K * col + i] * exp2f(_mantissa_numbits));
+
+#ifdef CDEBUG
+      printf("ith loop: %d\n", i);
+      printf("----------------------------------------\n");
+      printf("row: %d, col: %d, i: %d, op_A: %d, op_B: %d\n", row, col, i, _op_A[row * _K + i], _op_B[_N * i + col] );
+#endif
+      if ((A == 0) || (B == 0))
+        continue;
+
+#ifdef CDEBUG
+      printf("d%-th loop not zero detected\n", i);
+#endif
+      if (A < 0) 
+      {
+        dopA_neg = 1;
+        dopA = -A & maskAB;
+      }
+      else
+      {
+        dopA_neg = 0;
+        dopA = A & maskAB;
+      }
+
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dopA >> lod + 1) == 0)
+        {
+          dopA_lod = lod;
+          break;
+        }
+      }
+
+      if (B < 0)
+      { 
+        dopB_neg = 1;
+        dopB = -B & maskAB;
+      }
+      else
+      {
+        dopB_neg = 0;
+        dopB = B & maskAB;
+      }
+
+      dopB_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dopB >> lod + 1) == 0)
+        {
+          dopB_lod = lod;
+          break;
+        }
+      }
+      // End of check & conversion for negativeness, zero, and leading one 
+
+      // truncate by leading one and remove leading one
+      // remove leading one
+      dopA ^= (1 << dopA_lod); 
+
+      // shift right and left to truncate bits
+      if (dopA_lod >= _k1) 
+        dopAtrunc = (dopA >> (dopA_lod - _k1)); 
+      else
+        dopAtrunc = (dopA << (_k1- dopA_lod)); 
+
+      // truncation by leading one 
+      // remove leading one
+      dopB ^= (1 << dopB_lod); 
+
+      if (dopB_lod >= _k1) 
+      // shift right and left to truncate bits
+        dopBtrunc = (dopB >> (dopB_lod - _k1));
+      else
+        dopBtrunc = (dopB << (_k1- dopB_lod));
+      // remove leading one, add two truncated mantissa with additional unbiasing value
+      // declare device register called "temp"  
+      long long int temp = dopAtrunc + dopBtrunc + 1; //unbias 
+      long long int ma_out;
+      long long int dop2A;
+      long long int dop2B;
+      if (temp >= (1 << _k1))   
+      {
+        if (dopA_lod + dopB_lod + 1 >= _k1) 
+          ma_out = (temp << (dopA_lod + dopB_lod + 1 - _k1));
+        else
+          ma_out = (temp >> (_k1 - (dopA_lod + dopB_lod + 1)));
+
+        dop2A = (1 << dopA_lod) - dopA -1;
+        dop2B = (1 << dopB_lod) - dopB -1;
+      }
+      else
+      {
+        if (dopA_lod + dopB_lod >= _k1) 
+          ma_out = ((temp + (1 << _k1)) << (dopA_lod + dopB_lod - _k1));
+        else
+          ma_out = ((temp + (1 << _k1)) >> (_k1 - (dopA_lod + dopB_lod)));
+    
+        dop2A = dopA;
+        dop2B = dopB;
+      }
+
+      ma_out  = ma_out & maskout;
+
+      unsigned int is_zero_2stage;
+			// check any operand of zero
+			if ((dop2A == 0) || (dop2B == 0))
+				is_zero_2stage = 1;
+			else
+				is_zero_2stage = 0;
+
+      // 1st stage is finished!!
+      int dop2A_lod;
+      int dop2B_lod;
+      long long int dop2Atrunc;
+      long long int dop2Btrunc;
+
+      dop2A_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dop2A >> lod + 1) == 0)
+        {
+          dop2A_lod = lod;
+          break;
+        }
+      }
+
+      dop2B_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dop2B >> lod + 1) == 0)
+        {
+          dop2B_lod = lod;
+          break;
+        }
+      }
+      // End of check & conversion for negativeness, zero, and leading one 
+     
+      
+      // truncate by leading one and remove leading one
+      // remove leading one
+      dop2A ^= (1 << dop2A_lod); 
+
+      // shift right and left to truncate bits
+      if (dop2A_lod >= _k2) 
+        dop2Atrunc = (dop2A >> (dop2A_lod - _k2)); 
+      else
+        dop2Atrunc = (dop2A << (_k2- dop2A_lod)); 
+
+      // truncation by leading one 
+      // remove leading one
+      dop2B ^= (1 << dop2B_lod); 
+
+      if (dop2B_lod >= _k2) 
+      // shift right and left to truncate bits
+        dop2Btrunc = (dop2B >> (dop2B_lod - _k2));
+      else
+        dop2Btrunc = (dop2B << (_k2- dop2B_lod));
+      // remove leading one, add two truncated mantissa with additional unbiasing value
+      // declare device register called "temp"  
+      long long int temp2 = dop2Atrunc + dop2Btrunc + 1; //unbias 
+      long long int ma2_out;
+      if (temp2 >= (1 << _k2))   
+      {
+        if (dop2A_lod + dop2B_lod + 1 >= _k2) 
+          ma2_out = (temp2 << (dop2A_lod + dop2B_lod + 1 - _k2));
+        else
+          ma2_out = (temp2 >> (_k2 - (dop2A_lod + dop2B_lod + 1)));
+      }
+      else
+      {
+        if (dop2A_lod + dop2B_lod >= _k2) 
+          ma2_out = ((temp2 + (1 << _k2)) << (dop2A_lod + dop2B_lod - _k2));
+        else
+          ma2_out = ((temp2 + (1 << _k2)) >> (_k2 - (dop2A_lod + dop2B_lod)));
+      }
+
+      // check any operand of zero
+      if (is_zero_2stage) 
+        ma2_out  = 0;
+      else
+        ma2_out  = ma2_out & maskout;
+
+      long long int ma12_out = ma_out + ma2_out;
+
+      float real_ma_out;
+      if (dopA_neg ^ dopB_neg == 0)
+        real_ma_out = __ll2float_rn(ma12_out) / exp2f(_mantissa_numbits* 2);
+      else
+        real_ma_out = __ll2float_rn(-ma12_out) / exp2f(_mantissa_numbits* 2);
+
+      sum += real_ma_out; // one's complement conversion
+    } // End of for (int i = 0; i < _K; i++)
+#ifdef CDEBUG
+      printf("sum: %f\n", sum);
+#endif
+    float accum = sum;
+    accum *= _alpha;
+    float temp = _beta; 
+    temp *= _C[col *_M + row]; // column major order for CUBLAS
+    temp += accum;
+    _C[col*_M + row] = temp;
+     
+  } // End of if(row < _M && col < _N) 
+
+  __syncthreads();
+  
+  return;
+
+}
+//}}}
+
+__global__ void ma_2stage_c1_d(
+                  const double*_op_A, const double*_op_B, double* _C, 
+                  unsigned int _M, unsigned int _N, unsigned int _K,
+                  unsigned int _k1, unsigned int _k2, 
+                  unsigned int _allnumbits, unsigned int _mantissa_numbits,
+                  const double _alpha, const double _beta)
+{
+//{{{
+  unsigned int row =  blockIdx.y*blockDim.y + threadIdx.y;
+  unsigned int col =  blockIdx.x*blockDim.x + threadIdx.x ;
+  // make bit width as _allnumbits
+  long long int maskAB = 0;
+  for (int index = 0; index < _allnumbits; index++)
+    maskAB = maskAB + ((long long int)1 << index);
+  // End of make bit width as _allnumbits
+
+  // make bit width as 2 *_allnumbits - _fixed_numbits
+  // no fixed-width multiplication: _fixed_numbits = 2 * _allnumbits
+  long long int maskout = 0;
+  for (int index = 0; index < (2 * _allnumbits); index++)
+    maskout = maskout + ((long long int)1 << index);
+  // End of make bit width as 2 * _allnumbits: 2 *_allnumbits - _fixed_numbits
+      
+
+  // check & conversion for negativeness, zero, and leading one 
+  if(row < _M && col < _N) 
+  {
+    long long int dopA;
+    long long int dopB;
+    long long int dopAtrunc;
+    long long int dopBtrunc;
+    int dopA_neg;
+    int dopB_neg;
+    int dopA_lod;
+    int dopB_lod;
+
+#ifdef CDEBUG
+    printf("row: %d, col: %d\n", row, col);
+#endif
+    double sum = 0;
+    for (int i = 0; i < _K; i++)
+    {
+      long long int A = __double2ll_rn(_op_A[i * _M + row] * exp2f(_mantissa_numbits)); 
+      long long int B = __double2ll_rn(_op_B[_K * col + i] * exp2f(_mantissa_numbits));
+
+#ifdef CDEBUG
+      printf("ith loop: %d\n", i);
+      printf("----------------------------------------\n");
+      printf("row: %d, col: %d, i: %d, op_A: %d, op_B: %d\n", row, col, i, _op_A[row * _K + i], _op_B[_N * i + col] );
+#endif
+      if ((A == 0) || (B == 0))
+        continue;
+
+#ifdef CDEBUG
+      printf("d%-th loop not zero detected\n", i);
+#endif
+      if (A < 0) 
+      {
+        dopA_neg = 1;
+        dopA = -A & maskAB;
+      }
+      else
+      {
+        dopA_neg = 0;
+        dopA = A & maskAB;
+      }
+
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dopA >> lod + 1) == 0)
+        {
+          dopA_lod = lod;
+          break;
+        }
+      }
+
+      if (B < 0)
+      { 
+        dopB_neg = 1;
+        dopB = -B & maskAB;
+      }
+      else
+      {
+        dopB_neg = 0;
+        dopB = B & maskAB;
+      }
+
+      dopB_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dopB >> lod + 1) == 0)
+        {
+          dopB_lod = lod;
+          break;
+        }
+      }
+      // End of check & conversion for negativeness, zero, and leading one 
+
+      // truncate by leading one and remove leading one
+      // remove leading one
+      dopA ^= (1 << dopA_lod); 
+
+      // shift right and left to truncate bits
+      if (dopA_lod >= _k1) 
+        dopAtrunc = (dopA >> (dopA_lod - _k1)); 
+      else
+        dopAtrunc = (dopA << (_k1- dopA_lod)); 
+
+      // truncation by leading one 
+      // remove leading one
+      dopB ^= (1 << dopB_lod); 
+
+      if (dopB_lod >= _k1) 
+      // shift right and left to truncate bits
+        dopBtrunc = (dopB >> (dopB_lod - _k1));
+      else
+        dopBtrunc = (dopB << (_k1- dopB_lod));
+      // remove leading one, add two truncated mantissa with additional unbiasing value
+      // declare device register called "temp"  
+      long long int temp = dopAtrunc + dopBtrunc + 1; //unbias 
+      long long int ma_out;
+      long long int dop2A;
+      long long int dop2B;
+      if (temp >= (1 << _k1))   
+      {
+        if (dopA_lod + dopB_lod + 1 >= _k1) 
+          ma_out = (temp << (dopA_lod + dopB_lod + 1 - _k1));
+        else
+          ma_out = (temp >> (_k1 - (dopA_lod + dopB_lod + 1)));
+
+        dop2A = (1 << dopA_lod) - dopA -1;
+        dop2B = (1 << dopB_lod) - dopB -1;
+      }
+      else
+      {
+        if (dopA_lod + dopB_lod >= _k1) 
+          ma_out = ((temp + (1 << _k1)) << (dopA_lod + dopB_lod - _k1));
+        else
+          ma_out = ((temp + (1 << _k1)) >> (_k1 - (dopA_lod + dopB_lod)));
+    
+        dop2A = dopA;
+        dop2B = dopB;
+      }
+
+      ma_out  = ma_out & maskout;
+
+      unsigned int is_zero_2stage;
+			// check any operand of zero
+			if ((dop2A == 0) || (dop2B == 0))
+				is_zero_2stage = 1;
+			else
+				is_zero_2stage = 0;
+
+      // 1st stage is finished!!
+      int dop2A_lod;
+      int dop2B_lod;
+      long long int dop2Atrunc;
+      long long int dop2Btrunc;
+
+
+      dop2A_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dop2A >> lod + 1) == 0)
+        {
+          dop2A_lod = lod;
+          break;
+        }
+      }
+
+      dop2B_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < 32; lod++)
+      {
+        if ((dop2B >> lod + 1) == 0)
+        {
+          dop2B_lod = lod;
+          break;
+        }
+      }
+      // End of check & conversion for negativeness, zero, and leading one 
+     
+      
+      // truncate by leading one and remove leading one
+      // remove leading one
+      dop2A ^= (1 << dop2A_lod); 
+
+      // shift right and left to truncate bits
+      if (dop2A_lod >= _k2) 
+        dop2Atrunc = (dop2A >> (dop2A_lod - _k2)); 
+      else
+        dop2Atrunc = (dop2A << (_k2- dop2A_lod)); 
+
+      // truncation by leading one 
+      // remove leading one
+      dop2B ^= (1 << dop2B_lod); 
+
+      if (dop2B_lod >= _k2) 
+      // shift right and left to truncate bits
+        dop2Btrunc = (dop2B >> (dop2B_lod - _k2));
+      else
+        dop2Btrunc = (dop2B << (_k2- dop2B_lod));
+      // remove leading one, add two truncated mantissa with additional unbiasing value
+      // declare device register called "temp"  
+      long long int temp2 = dop2Atrunc + dop2Btrunc + 1; //unbias 
+      long long int ma2_out;
+      if (temp2 >= (1 << _k2))   
+      {
+        if (dop2A_lod + dop2B_lod + 1 >= _k2) 
+          ma2_out = (temp2 << (dop2A_lod + dop2B_lod + 1 - _k2));
+        else
+          ma2_out = (temp2 >> (_k2 - (dop2A_lod + dop2B_lod + 1)));
+      }
+      else
+      {
+        if (dop2A_lod + dop2B_lod >= _k2) 
+          ma2_out = ((temp2 + (1 << _k2)) << (dop2A_lod + dop2B_lod - _k2));
+        else
+          ma2_out = ((temp2 + (1 << _k2)) >> (_k2 - (dop2A_lod + dop2B_lod)));
+      }
+
+      // check any operand of zero
+      if (is_zero_2stage) 
+        ma2_out  = 0;
+      else
+        ma2_out  = ma2_out & maskout;
+
+      long long int ma12_out = ma_out + ma2_out;
+
+      double real_ma_out;
+      if (dopA_neg ^ dopB_neg == 0)
+        real_ma_out = __ll2double_rn(ma12_out) / exp2f(_mantissa_numbits* 2);
+      else
+        real_ma_out = __ll2double_rn(-ma12_out) / exp2f(_mantissa_numbits* 2);
+
+      sum += real_ma_out; // one's complement conversion
+    } // End of for (int i = 0; i < _K; i++)
+#ifdef CDEBUG
+      printf("sum: %f\n", sum);
+#endif
+    double accum = sum;
+    accum *= _alpha;
+    double temp = _beta; 
+    temp *= _C[col *_M + row]; // column major order for CUBLAS
+    temp += accum;
+    _C[col*_M + row] = temp;
+     
+  } // End of if(row < _M && col < _N) 
+
+  __syncthreads();
+  
+  return;
+
+}
+//}}}
+
+
+
+
+
+
+
+
 __global__ void mult_bfloat16(
                   const float*_op_A, const float*_op_B, float* _C, 
                   unsigned int _M, unsigned int _N, unsigned int _K,
@@ -816,6 +1344,191 @@ __global__ void mitchk_f(
 //}}}
 
 
+__global__ void mitchk_c1_new_f(
+                  const float*_op_A, const float*_op_B, float* _C, 
+                  unsigned int _M, unsigned int _N, unsigned int _K,
+                  unsigned int _drum_k, 
+                  unsigned int _allnumbits, unsigned int _mantissa_numbits, 
+                  const float _alpha, const float _beta)
+{
+//{{{
+  unsigned int row =  blockIdx.y*blockDim.y + threadIdx.y;
+  unsigned int col =  blockIdx.x*blockDim.x + threadIdx.x ;
+  // make bit width as _allnumbits
+  long long int maskAB = 0;
+  for (int index = 0; index < _allnumbits; index++)
+    maskAB = maskAB + ((long long int)(1) << index);
+  // End of make bit width as _allnumbits
+  
+  // MINSOO : modify so that MSBs are truncated as well as LSBs
+  long long int maskout = 0;
+  for (int index = _mantissa_numbits; index < (2 * _allnumbits); index++) {
+    maskout = maskout + ((long long int)(1) << index);
+  }
+  long long int maskhigh = 0;
+  for (int index = 0; index < (_allnumbits+_mantissa_numbits); index++) {
+    maskhigh = maskhigh + ((long long int)(1) << index);
+  }
+ 
+  long long int maskdrum = 1;
+
+
+  // check & conversion for negativeness, zero, and leading one 
+  if(row < _M && col < _N) 
+  {
+		long long int dopA;
+		long long int dopB;
+		int dopA_neg;
+		int dopB_neg;
+		int dopA_lod;
+		int dopB_lod;
+
+#ifdef CDEBUG
+    printf("row: %d, col: %d\n", row, col);
+#endif
+    double sum = 0;
+    for (int i = 0; i < _K; i++)
+    {
+      long long int A = __float2ll_rd(_op_A[i * _M + row] * exp2f(_mantissa_numbits)); 
+      long long int B = __float2ll_rd(_op_B[_K * col + i] * exp2f(_mantissa_numbits));
+
+#ifdef CDEBUG
+      printf("ith loop: %d\n", i);
+      printf("----------------------------------------\n");
+      printf("row: %d, col: %d, i: %d, op_A: %d, op_B: %d\n", row, col, i, _op_A[row * _K + i], _op_B[_N * i + col] );
+#endif
+      if ((A == 0) || (B == 0))
+        continue;
+
+#ifdef CDEBUG
+      printf("d%-th loop not zero detected\n", i);
+#endif
+      if (A < 0) 
+      {
+        dopA_neg = 1;
+        dopA = ~A & maskAB;
+      }
+      else
+      {
+        dopA_neg = 0;
+        dopA = A & maskAB;
+      }
+      
+      if (B < 0)
+      { 
+        dopB_neg = 1;
+        dopB = ~B & maskAB;
+      }
+      else
+      {
+        dopB_neg = 0;
+        dopB = B & maskAB;
+      }
+
+      // MINSOO : match the behavior to verilog code
+      if (dopA == 0) {
+        dopA = 1;
+      }
+      if (dopB == 0) {
+        dopB = 1;
+      }
+
+      // 32bit fixed-point format is assumed
+      // MINSOO : changed 32 to _allnumbits
+      for (int lod = 0; lod < _allnumbits; lod++)
+      {
+        if ((dopA >> (lod + 1)) == 0)
+        {
+          dopA_lod = lod;
+          break;
+        }
+      }
+
+      dopB_lod = 0;
+      // 32bit fixed-point format is assumed
+      for (int lod = 0; lod < _allnumbits; lod++)
+      {
+        if ((dopB >> (lod + 1)) == 0)
+        {
+          dopB_lod = lod;
+          break;
+        }
+      }
+
+		  // truncate by leading one and remove leading one
+			// remove leading one
+			dopA ^= ((long long int)(1) << dopA_lod); 
+
+			// shift right and left to truncate bits
+			if (dopA_lod >= _drum_k) 
+				dopA = (dopA >> (dopA_lod - _drum_k)); 
+			else
+				dopA = (dopA << (_drum_k - dopA_lod)); 
+
+			// truncation by leading one 
+			// remove leading one
+			dopB ^= ((long long int)(1) << dopB_lod); 
+
+			if (dopB_lod >= _drum_k) 
+			// shift right and left to truncate bits
+				dopB = (dopB >> (dopB_lod - _drum_k));
+			else
+				dopB = (dopB << (_drum_k - dopB_lod));
+		
+            // insert drum bias
+            dopA = dopA | maskdrum;
+            dopB = dopB | maskdrum;
+
+			long long int temp = dopA + dopB; 
+			long long int ma_out;
+			if (temp >= __float2ll_rd(exp2f(_drum_k)))   // carry happened
+			{
+				if (dopA_lod + dopB_lod + 1 >= _drum_k) {
+					ma_out = (temp << (dopA_lod + dopB_lod + 1 - _drum_k));
+				}
+				else {
+					ma_out = (temp >> (_drum_k - (dopA_lod + dopB_lod + 1)));
+				}
+			}
+			else  // carry did not happen
+			{
+				if (dopA_lod + dopB_lod >= _drum_k)  {
+					ma_out = ((temp + (1 << _drum_k)) << (dopA_lod + dopB_lod - _drum_k));
+				}
+				else {
+					ma_out = ((temp + (1 << _drum_k)) >> (_drum_k - (dopA_lod + dopB_lod)));
+				}
+			}
+		
+      ma_out = ma_out & maskhigh;
+
+
+			float real_ma_out;
+			if ((dopA_neg ^ dopB_neg) == 0) {
+				ma_out = ma_out & maskout;
+			}
+			else {
+				ma_out = (~ma_out) & maskout;
+			}
+			real_ma_out = __ll2float_rd(ma_out) / exp2f(_mantissa_numbits* 2);
+			sum += real_ma_out; // one's complement conversion
+    } // End of for (int i = 0; i < _K; i++)
+    
+		float accum = sum;
+    accum *= _alpha;
+    float temp = _beta; 
+    temp *= _C[col *_M + row]; // column major order for CUBLAS
+    temp += accum;
+    _C[col*_M + row] = temp;
+     
+  } // End of if(row < _M && col < _N) 
+
+  __syncthreads();
+  
+  return;
+
+}
+//}}}
 
 
 __global__ void mitchk_c1_f(

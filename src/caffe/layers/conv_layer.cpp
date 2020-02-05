@@ -14,9 +14,9 @@ bool mult_dump3(false);
 int dump_layer(0);
 Statis<float>* statis;
 Batch<float>* batch;
-int batch_size = 35;
-int num_clayer = 170;
-int num_ilayer = 10;
+int batch_size = 5;
+int num_clayer = 500;
+int num_ilayer = 20;
 
 namespace caffe {
 

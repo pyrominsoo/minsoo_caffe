@@ -390,13 +390,25 @@ int test() {
         batnorm_variscale = 1.00881936;
         break; 
       case 10: // mitchk_c1
-        batnorm_meanscale = 0.956;
-        batnorm_variscale = 0.913936;
+        //batnorm_meanscale = 0.956;
+        //batnorm_variscale = 0.913936;
+        batnorm_meanscale = 0.941;
+        batnorm_variscale = 0.885;
+        //batnorm_meanscale = 0.9207; 
+        //batnorm_variscale = 0.84768849;
         break; 
       case 12: // bfloat16
         batnorm_meanscale = 1.0;
         batnorm_variscale = 1.0;
         break; 
+      case 13: // mitchk_c1_new
+        batnorm_meanscale = 0.9615;    // for K=5 new
+        batnorm_variscale = 0.92448225;
+        break;
+      case 14: // arith
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break;
       default:
         std::cout << "undefined mult_type: " << mult_type << std::endl;
         exit(1);
@@ -452,7 +464,7 @@ int test() {
 
   if (statis_on) {
     // MINSOO Print out and delete statis
-    int inf_sel[] = {2,10,22,27,33};//{35, 44, 46};
+    int inf_sel[] = {0,1,2,3,4};//{35, 44, 46};
     //statis->fwriteBareSel((char*)"winner.log", 0, inf_sel, 5);
     statis->fwriteBare((char*)"winner.log");
     delete statis;
