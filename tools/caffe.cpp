@@ -463,10 +463,24 @@ int test() {
   }
 
   if (statis_on) {
+    int wr_size = 5;
+
+    int *inf_sel = new int[wr_size];
+    for (int bat = 0; bat < FLAGS_iterations; bat++) {
+        for (int inf = 0; inf < batch_size; inf = inf + wr_size ) {
+            for (int i = 0; i < wr_size; i++) {
+                inf_sel[i] = inf + i;
+            }
+            std::string fname = "/home/pyrominsoo/disk2/winner"+ std::to_string(bat*batch_size+inf);
+            std::cout << "Start fwriteBareSel with " << bat << " " << inf_sel[0] << " " << std::endl;
+            statis->fwriteBareSel(fname, bat, inf_sel, wr_size);
+        }
+    }
+    delete[] inf_sel;
+
     // MINSOO Print out and delete statis
-    int inf_sel[] = {0,1,2,3,4};//{35, 44, 46};
-    //statis->fwriteBareSel((char*)"winner.log", 0, inf_sel, 5);
-    statis->fwriteBare((char*)"winner.log");
+    //int inf_sel[] = {0,1,2,3,4};//{35, 44, 46};
+    //statis->fwriteBare((char*)"winner.log");
     delete statis;
   }
 
