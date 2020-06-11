@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include "Statis.hpp"
 
 
@@ -1147,7 +1148,7 @@ void Statis<Dtype>::fwriteBareOne(const char* filename, int batchnum, int infnum
 
 
 template <typename Dtype>
-void Statis<Dtype>::fwriteBareSel(const char* filename, int batchnum, int infnum[], int size) {
+void Statis<Dtype>::fwriteBareSel(std::string filename, int batchnum, int infnum[], int size) {
 
     std::ofstream fout;
     fout.open(filename, std::ios::out);

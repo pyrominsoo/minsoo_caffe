@@ -151,7 +151,7 @@ class Statis {
         void fwriteAll(const char* filename);
         void fwriteBare(const char* filename);
         void fwriteBareOne(const char* filename, int batchnum, int infnum);
-        void fwriteBareSel(const char* filename, int batchnum, int infnum[], int size);
+        void fwriteBareSel(std::string filename, int batchnum, int infnum[], int size);
         void fwriteSimple(const char* filename);
 
     private:
