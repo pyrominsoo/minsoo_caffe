@@ -378,8 +378,10 @@ int test() {
         batnorm_variscale = 0.99920016;
         break; 
       case 6: // mitchk
-        batnorm_meanscale = 0.956;
-        batnorm_variscale = 0.913936;
+        //batnorm_meanscale = 0.956;
+        //batnorm_variscale = 0.913936;
+        batnorm_meanscale = 0.941;
+        batnorm_variscale = 0.885;
         break; 
       case 7: // mitchk_unbias
         batnorm_meanscale = 1.0044;
