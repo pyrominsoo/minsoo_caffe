@@ -1,3 +1,3 @@
-#define INTBITS 10
-#define FRACBITS 22
+#define INTBITS 11
+#define FRACBITS 21
 // Ratko
