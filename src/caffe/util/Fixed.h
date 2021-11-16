@@ -262,7 +262,7 @@ public:
 
 public:
 	static const size_t base_size          = base_type_info::size;
-	static const base_type fractional_mask = ~((~base_type(0)) << fractional_bits);
+	static const base_type fractional_mask = ((unsigned)~((~base_type(0))) << fractional_bits);
 	static const base_type integer_mask    = ~fractional_mask;
 
 public:
