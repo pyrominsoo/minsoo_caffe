@@ -145,8 +145,8 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
     blocksPerGrid.x = ceil(double(M)/double(threadsPerBlock.x));
     blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
   }
-
-  switch (mult_type) 
+  int choice = 12;
+  switch (choice) 
   {
     case 2: // FIXED
       fixed_f<<<blocksPerGrid,threadsPerBlock>>>
