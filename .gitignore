@@ -111,7 +111,6 @@ include/minsoo/fixed.hpp
 nohup.out
 
 # mult selection
-current_mult
 
 #log collection
 varying.txt
