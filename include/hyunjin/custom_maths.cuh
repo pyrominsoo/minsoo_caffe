@@ -597,6 +597,7 @@ __global__ void mult_bfloat16(
 			float B = _op_B[_K * col + i];
 			float tempA = 0;
 			float tempB = 0;
+      printf("Here\n");
 			float2bfloat(A, tempA);
 			float2bfloat(B, tempB);
 			float mult = tempA * tempB;
