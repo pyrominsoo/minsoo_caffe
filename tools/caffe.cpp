@@ -326,7 +326,7 @@ int test() {
     exit(1);
   }
   params >> string_in;
-  mult_type = stoi(string_in);
+  mult_type = 20;
   params >> string_in;
   drum_k = stoi(string_in);
   params >> string_in;
