@@ -604,7 +604,7 @@ __global__ void mult_bfloat16(
 			float2bfloat(mult,real_ma_out);
 			sum += real_ma_out;
     } // End of for (int i = 0; i < _K; i++)
-    
+    printf("Here \n");;
 		float accum = sum;
     accum *= _alpha;
     float temp = _beta; 
