@@ -184,7 +184,6 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     case 12: //bfloat16
-      std::cout << "Here \n";
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
         (dop_B, dop_A, C, N, M, K, drum_k,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
