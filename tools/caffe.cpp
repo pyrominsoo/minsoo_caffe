@@ -196,6 +196,15 @@ caffe::SolverAction::Enum GetRequestedAction(
 
 // Train / Finetune a model.
 int train() {
+  int fix_batnorm;
+  // MINSOO read runtime parameters
+  std::ifstream params;
+  string string_in;
+  params.open("params");
+  if (!params) {
+    std::cout << "Unable to open current_mult";
+    exit(1);
+  }
   // MINSOO
   // need to set mult_type to float (1)
   params >> string_in;
