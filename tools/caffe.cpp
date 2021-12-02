@@ -198,7 +198,7 @@ caffe::SolverAction::Enum GetRequestedAction(
 int train() {
   // MINSOO
   // need to set mult_type to float (1)
-  mult_type = 1;
+  // mult_type = 12;
 
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
