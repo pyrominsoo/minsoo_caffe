@@ -31,7 +31,7 @@ extern unsigned int drum_k;
 //_DMODE_TYPE  data_mode;         // data mode of logarithmic representation
 //unsigned int numbitssampling;   // 2 ^ numbitssampling in logarithmic stochastic rounding 
 //unsigned int numbits_lsr;       // bits used as weights in logarithmic stochastic rounding 
-
+#define MULT_SWITCH 12 
 #define BLOCK_SIZE 32
 #define DRUM_K 4
 #define ALLNUMBITS INTBITS+FRACBITS
@@ -109,7 +109,7 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
   cublasOperation_t cuTransB =
       (TransB == CblasNoTrans) ? CUBLAS_OP_N : CUBLAS_OP_T;
 
-  if (mult_type == 1) // FLOAT
+  if (MULT_SWITCH == 1) // FLOAT
   {
     CUBLAS_CHECK(cublasSgemm(Caffe::cublas_handle(), cuTransB, cuTransA,
         N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
@@ -146,7 +146,7 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
     blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
   }
 
-  switch (mult_type) 
+  switch (MULT_SWITCH) 
   {
     case 2: // FIXED
       fixed_f<<<blocksPerGrid,threadsPerBlock>>>
@@ -235,7 +235,7 @@ void caffe_gpu_gemv_approx<float>(const CBLAS_TRANSPOSE TransA, const int M,
   cublasOperation_t cuTransA =
     (TransA == CblasNoTrans) ? CUBLAS_OP_T : CUBLAS_OP_N;
 
-  if (mult_type == 1) // float
+  if (MULT_SWITCH == 1) // float
   {
     CUBLAS_CHECK(cublasSgemv(Caffe::cublas_handle(), cuTransA, N, M, &alpha,
       A, N, x, 1, &beta, y, 1));
@@ -295,7 +295,7 @@ void caffe_gpu_gemv_approx<float>(const CBLAS_TRANSPOSE TransA, const int M,
     blocksPerGrid.y = ceil(double(row)/double(threadsPerBlock.y));
   }
  
-  switch (mult_type) 
+  switch (MULT_SWITCH) 
   {
     case 2: //FIXED:
       fixed_f<<<blocksPerGrid,threadsPerBlock>>>
