@@ -198,7 +198,97 @@ caffe::SolverAction::Enum GetRequestedAction(
 int train() {
   // MINSOO
   // need to set mult_type to float (1)
-  // mult_type = 12;
+  params >> string_in;
+  mult_type = stoi(string_in);
+  params >> string_in;
+  drum_k = stoi(string_in);
+  params >> string_in;
+  fix_batnorm = stoi(string_in);
+
+  // MINSOO prepare mult type
+  // std::ifstream current_mult;
+  // string string_in;
+  // current_mult.open("current_mult");
+  // if (!current_mult) {
+  //   std::cout << "Unable to open current_mult";
+  //   exit(1);
+  // }
+  // current_mult >> string_in;
+  // mult_type = stoi(string_in);
+  // current_mult.close();
+  //
+  // // MINSOO prepare DRUM K value
+  // std::ifstream k_input;
+  // k_input.open("DRUM_K");
+  // if (!k_input) {
+  //   std::cout << "Unable to open DRUM_K";
+  //   exit(1);
+  // }
+  // k_input >> string_in;
+  // drum_k = stoi(string_in);
+  // k_input.close();
+
+  // MINSOO setup batch norm parameter scaling
+  if (!fix_batnorm) {
+    batnorm_meanscale = 1.0;
+    batnorm_variscale = 1.0;
+  } else {
+    switch (mult_type) {
+      case 1: // Float
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break;
+      case 2: // fixed
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break;
+      case 4: // iterlog2
+        batnorm_meanscale = 0.99;
+        batnorm_variscale = 0.9801;
+        break; 
+      case 5: // drum
+        batnorm_meanscale = 0.9996;
+        batnorm_variscale = 0.99920016;
+        break; 
+      case 6: // mitchk
+        //batnorm_meanscale = 0.956;
+        //batnorm_variscale = 0.913936;
+        batnorm_meanscale = 0.941;
+        batnorm_variscale = 0.885;
+        break; 
+      case 7: // mitchk_unbias
+        batnorm_meanscale = 1.0044;
+        batnorm_variscale = 1.00881936;
+        break; 
+      case 8: // mitchk_unbias_c1
+        batnorm_meanscale = 1.0044;
+        batnorm_variscale = 1.00881936;
+        break; 
+      case 10: // mitchk_c1
+        //batnorm_meanscale = 0.956;
+        //batnorm_variscale = 0.913936;
+        batnorm_meanscale = 0.941;
+        batnorm_variscale = 0.885;
+        //batnorm_meanscale = 0.9207; 
+        //batnorm_variscale = 0.84768849;
+        break; 
+      case 12: // bfloat16
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break; 
+      case 13: // mitchk_c1_new
+        batnorm_meanscale = 0.9615;    // for K=5 new
+        batnorm_variscale = 0.92448225;
+        break;
+      case 14: // arith
+        batnorm_meanscale = 1.0;
+        batnorm_variscale = 1.0;
+        break;
+      default:
+        std::cout << "undefined mult_type: " << mult_type << std::endl;
+        exit(1);
+        break;
+    }
 
   CHECK_GT(FLAGS_solver.size(), 0) << "Need a solver definition to train.";
   CHECK(!FLAGS_snapshot.size() || !FLAGS_weights.size())
