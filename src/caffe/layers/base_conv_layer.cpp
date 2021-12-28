@@ -377,7 +377,7 @@ void BaseConvolutionLayer<Dtype>::backward_gpu_gemm(const Dtype* output,
     col_buff = input;
   }
   for (int g = 0; g < group_; ++g) {
-    caffe_gpu_gemm<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
+    caffe_gpu_gemm_approxV2<Dtype>(CblasTrans, CblasNoTrans, kernel_dim_,
         conv_out_spatial_dim_, conv_out_channels_ / group_,
         (Dtype)1., weights + weight_offset_ * g, output + output_offset_ * g,
         (Dtype)0., col_buff + col_offset_ * g);
@@ -396,7 +396,7 @@ void BaseConvolutionLayer<Dtype>::weight_gpu_gemm(const Dtype* input,
     col_buff = col_buffer_.gpu_data();
   }
   for (int g = 0; g < group_; ++g) {
-    caffe_gpu_gemm<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
+    caffe_gpu_gemm_approxV2<Dtype>(CblasNoTrans, CblasTrans, conv_out_channels_ / group_,
         kernel_dim_, conv_out_spatial_dim_,
         (Dtype)1., output + output_offset_ * g, col_buff + col_offset_ * g,
         (Dtype)1., weights + weight_offset_ * g);

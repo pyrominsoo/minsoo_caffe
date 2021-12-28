@@ -251,48 +251,6 @@ int train() {
         batnorm_meanscale = 1.0;
         batnorm_variscale = 1.0;
         break;
-      case 4: // iterlog2
-        batnorm_meanscale = 0.99;
-        batnorm_variscale = 0.9801;
-        break; 
-      case 5: // drum
-        batnorm_meanscale = 0.9996;
-        batnorm_variscale = 0.99920016;
-        break; 
-      case 6: // mitchk
-        //batnorm_meanscale = 0.956;
-        //batnorm_variscale = 0.913936;
-        batnorm_meanscale = 0.941;
-        batnorm_variscale = 0.885;
-        break; 
-      case 7: // mitchk_unbias
-        batnorm_meanscale = 1.0044;
-        batnorm_variscale = 1.00881936;
-        break; 
-      case 8: // mitchk_unbias_c1
-        batnorm_meanscale = 1.0044;
-        batnorm_variscale = 1.00881936;
-        break; 
-      case 10: // mitchk_c1
-        //batnorm_meanscale = 0.956;
-        //batnorm_variscale = 0.913936;
-        batnorm_meanscale = 0.941;
-        batnorm_variscale = 0.885;
-        //batnorm_meanscale = 0.9207; 
-        //batnorm_variscale = 0.84768849;
-        break; 
-      case 12: // bfloat16
-        batnorm_meanscale = 1.0;
-        batnorm_variscale = 1.0;
-        break; 
-      case 13: // mitchk_c1_new
-        batnorm_meanscale = 0.9615;    // for K=5 new
-        batnorm_variscale = 0.92448225;
-        break;
-      case 14: // arith
-        batnorm_meanscale = 1.0;
-        batnorm_variscale = 1.0;
-        break;
       default:
         std::cout << "undefined mult_type: " << mult_type << std::endl;
         exit(1);
@@ -468,48 +426,7 @@ int test() {
         batnorm_meanscale = 1.0;
         batnorm_variscale = 1.0;
         break;
-      case 4: // iterlog2
-        batnorm_meanscale = 0.99;
-        batnorm_variscale = 0.9801;
-        break; 
-      case 5: // drum
-        batnorm_meanscale = 0.9996;
-        batnorm_variscale = 0.99920016;
-        break; 
-      case 6: // mitchk
-        //batnorm_meanscale = 0.956;
-        //batnorm_variscale = 0.913936;
-        batnorm_meanscale = 0.941;
-        batnorm_variscale = 0.885;
-        break; 
-      case 7: // mitchk_unbias
-        batnorm_meanscale = 1.0044;
-        batnorm_variscale = 1.00881936;
-        break; 
-      case 8: // mitchk_unbias_c1
-        batnorm_meanscale = 1.0044;
-        batnorm_variscale = 1.00881936;
-        break; 
-      case 10: // mitchk_c1
-        //batnorm_meanscale = 0.956;
-        //batnorm_variscale = 0.913936;
-        batnorm_meanscale = 0.941;
-        batnorm_variscale = 0.885;
-        //batnorm_meanscale = 0.9207; 
-        //batnorm_variscale = 0.84768849;
-        break; 
-      case 12: // bfloat16
-        batnorm_meanscale = 1.0;
-        batnorm_variscale = 1.0;
-        break; 
-      case 13: // mitchk_c1_new
-        batnorm_meanscale = 0.9615;    // for K=5 new
-        batnorm_variscale = 0.92448225;
-        break;
-      case 14: // arith
-        batnorm_meanscale = 1.0;
-        batnorm_variscale = 1.0;
-        break;
+    
       default:
         std::cout << "undefined mult_type: " << mult_type << std::endl;
         exit(1);
