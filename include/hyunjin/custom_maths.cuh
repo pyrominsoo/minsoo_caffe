@@ -60,12 +60,12 @@
 #endif
 
 __device__ unsigned int xorshift( unsigned int _state);
-__global__ uint8_t LOD(uint8_t val);
-__global__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter);
-__global__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter);
-__global__  uint32_t float_as_uint (float a);
-__global__ float uint_as_float (uint32_t a);
-__global__ float fp32_mul_ILM (float a, float b, uint8_t iter);
+__device__ uint8_t LOD(uint8_t val);
+__device__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter);
+__device__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter);
+__device__  uint32_t float_as_uint (float a);
+__device__ float uint_as_float (uint32_t a);
+__device__ float fp32_mul_ILM (float a, float b, uint8_t iter);
 
 
 __device__ void float2bfloat(const float src, float& dst) {
@@ -217,13 +217,11 @@ __global__ void mult_bfloat16_ILM1(
 
 
 
+///////// ILM ////////////
 
 
 
-
-
-
-__global__ uint8_t LOD(uint8_t val){
+__device__ uint8_t LOD(uint8_t val){
     uint32_t n = 0, x;
     x = val;
     if (x <= 0x0000ffff) n += 16, x <<= 16;
@@ -234,7 +232,7 @@ __global__ uint8_t LOD(uint8_t val){
     return 31 - n;
 }
 
-__global__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter){
+__device__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter){
     /*
         a, b -> input operands,
         iter -> number of iterations
@@ -263,7 +261,7 @@ __global__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter){
     return prod0 + prod1;
 }
 
-__global__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter)
+__device__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter)
 {
     uint64_t prod;
     uint32_t expoa, expob, manta, mantb, shift;
@@ -357,26 +355,34 @@ __global__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter)
     return r;
 }
 
-__global__  uint32_t float_as_uint (float a)
+__device__  uint32_t float_as_uint (float a)
 {
     uint32_t r;
     memcpy (&r, &a, sizeof r);
     return r;
 }
 
-__global__ float uint_as_float (uint32_t a)
+__device__ float uint_as_float (uint32_t a)
 {
     float r;
     memcpy (&r, &a, sizeof r);
     return r;
 }
 
-__global__ float fp32_mul_ILM (float a, float b, uint8_t iter)
+__device__ float fp32_mul_ILM (float a, float b, uint8_t iter)
 {
     return uint_as_float (fp32_mul_core (float_as_uint (a), float_as_uint (b),iter));
 }
 
+__device__ unsigned int xorshift( unsigned int _state) 
+{
 
+	unsigned int x = _state;
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+  return x;
+}
 
 
 #endif
