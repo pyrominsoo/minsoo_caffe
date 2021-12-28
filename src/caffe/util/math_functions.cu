@@ -146,7 +146,7 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
     blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
   }
 
-  switch (MULT_SWITCH) 
+  switch (mult_type) 
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
@@ -254,7 +254,7 @@ void caffe_gpu_gemv_approx<float>(const CBLAS_TRANSPOSE TransA, const int M,
     blocksPerGrid.y = ceil(double(row)/double(threadsPerBlock.y));
   }
  
-  switch (MULT_SWITCH) 
+  switch (mult_type) 
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
@@ -342,7 +342,7 @@ void caffe_gpu_gemm_approxV2<float>(const CBLAS_TRANSPOSE TransA,
     blocksPerGrid.y = ceil(double(N)/double(threadsPerBlock.y));
   }
 
-  switch (MULT_SWITCH) 
+  switch (mult_type) 
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
@@ -450,7 +450,7 @@ void caffe_gpu_gemv_approxV2<float>(const CBLAS_TRANSPOSE TransA, const int M,
     blocksPerGrid.y = ceil(double(row)/double(threadsPerBlock.y));
   }
  
-  switch (MULT_SWITCH) 
+  switch (mult_type) 
   {
     case 2: // Exact 
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
