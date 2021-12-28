@@ -150,13 +150,13 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_A, dop_B, y, row, col, N, drum_k,
-        ALLNUMBITS, FRACBITS,  alpha, beta);  
+        (dop_B, dop_A, C, N, M, K, 
+        ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     case 3: // FIXED
       mult_bfloat16_ILM1<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_A, dop_B, y, row, col, N, drum_k,
-        ALLNUMBITS, FRACBITS,  alpha, beta); 
+        (dop_B, dop_A, C, N, M, K, 
+        ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     default :
       std::cout << "undefined mult_type: " << mult_type << std::endl;
@@ -454,12 +454,12 @@ void caffe_gpu_gemv_approxV2<float>(const CBLAS_TRANSPOSE TransA, const int M,
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_B, dop_A, C, N, M, K, 
+        (dop_A, dop_B, y, row, col, N, drum_k, 
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     case 3: // FIXED
       mult_bfloat16_ILM2<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_B, dop_A, C, N, M, K, 
+        (dop_A, dop_B, y, row, col, N, drum_k, 
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     default :
