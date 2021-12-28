@@ -255,6 +255,9 @@ __device__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter){
     prod0 = a * (1<<Kb) + ResB * (1<<Ka);
     prod1 = 0;
     if(iter == 2){
+        if(ResA == 0 || ResB == 0) {
+            return prod0;
+        }
         Ka = LOD(ResA);
         Kb = LOD(ResB);
         Res2B = ResB ^ (1 << Kb);
