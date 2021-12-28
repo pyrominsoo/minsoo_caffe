@@ -63,8 +63,8 @@ __device__ unsigned int xorshift( unsigned int _state);
 __device__ uint8_t LOD(uint8_t val);
 __device__ uint16_t ILM(uint8_t a, uint8_t b, uint8_t iter);
 __device__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter);
-__device__  uint32_t float_as_uint (float a);
-__device__ float uint_as_float (uint32_t a);
+__device__  uint32_t uint_as_floatV2 (float a);
+__device__ float uint_as_floatV2 (uint32_t a);
 __device__ float fp32_mul_ILM (float a, float b, uint8_t iter);
 
 
@@ -355,14 +355,14 @@ __device__ uint32_t fp32_mul_core (uint32_t a, uint32_t b, uint8_t iter)
     return r;
 }
 
-__device__  uint32_t float_as_uint (float a)
+__device__  uint32_t uint_as_floatV2 (float a)
 {
     uint32_t r;
     memcpy (&r, &a, sizeof r);
     return r;
 }
 
-__device__ float uint_as_float (uint32_t a)
+__device__ float uint_as_floatV2 (uint32_t a)
 {
     float r;
     memcpy (&r, &a, sizeof r);
@@ -371,7 +371,7 @@ __device__ float uint_as_float (uint32_t a)
 
 __device__ float fp32_mul_ILM (float a, float b, uint8_t iter)
 {
-    return uint_as_float (fp32_mul_core (float_as_uint (a), float_as_uint (b),iter));
+    return uint_as_floatV2 (fp32_mul_core (uint_as_floatV2 (a), uint_as_floatV2 (b),iter));
 }
 
 __device__ unsigned int xorshift( unsigned int _state) 
