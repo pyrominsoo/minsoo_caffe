@@ -150,12 +150,13 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_B, dop_A, C, N, M, K, 
-        ALLNUMBITS, FRACBITS,  alpha, beta);   
+      mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
+        (dop_B, dop_A, C, N, M, K, drum_k,
+        ALLNUMBITS, FRACBITS,  alpha, beta);     
       break;
     case 3: // FIXED
       mult_bfloat16_ILM1<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_B, dop_A, C, N, M, K, 
+        (dop_B, dop_A, C, N, M, K, drum_k
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     default :
@@ -258,12 +259,12 @@ void caffe_gpu_gemv_approx<float>(const CBLAS_TRANSPOSE TransA, const int M,
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_A, dop_B, y, row, col, N, 
+        (dop_A, dop_B, y, row, col, N, drum_k,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     case 3: // FIXED
       mult_bfloat16_ILM1<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_A, dop_B, y, row, col, N, 
+        (dop_A, dop_B, y, row, col, N, drum_k,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     default :
@@ -346,12 +347,12 @@ void caffe_gpu_gemm_approxV2<float>(const CBLAS_TRANSPOSE TransA,
   {
     case 2: // FIXED
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_B, dop_A, C, N, M, K, 
+        (dop_B, dop_A, C, N, M, K, drum_k,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     case 3: // FIXED
       mult_bfloat16_ILM2<<<blocksPerGrid,threadsPerBlock>>>
-        (dop_B, dop_A, C, N, M, K, 
+        (dop_B, dop_A, C, N, M, K, drum_k,
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
     default :
@@ -452,12 +453,12 @@ void caffe_gpu_gemv_approxV2<float>(const CBLAS_TRANSPOSE TransA, const int M,
  
   switch (MULT_SWITCH) 
   {
-    case 2: // FIXED
+    case 2: // Exact 
       mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
         (dop_A, dop_B, y, row, col, N, drum_k, 
         ALLNUMBITS, FRACBITS,  alpha, beta);   
       break;
-    case 3: // FIXED
+    case 3: // ILM
       mult_bfloat16_ILM2<<<blocksPerGrid,threadsPerBlock>>>
         (dop_A, dop_B, y, row, col, N, drum_k, 
         ALLNUMBITS, FRACBITS,  alpha, beta);   
