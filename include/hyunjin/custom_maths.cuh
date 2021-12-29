@@ -196,7 +196,7 @@ __global__ void mult_bfloat16_ILM1(
 			float tempB = 0;
 			float2bfloat(A, tempA);
 			float2bfloat(B, tempB);
-			float mult = fp32_mul_ILM(tempA,tempB,1);
+			float mult = fp32_mul_ILM(tempA,tempB,2);
 			float real_ma_out = 0;
 			float2bfloat(mult,real_ma_out);
 			sum += real_ma_out;
