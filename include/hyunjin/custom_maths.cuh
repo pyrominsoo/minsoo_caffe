@@ -139,7 +139,7 @@ __global__ void mult_bfloat16_ILM2(
   if(row < _M && col < _N) 
   {
     double sum = 0;
-    printf("Hello from ILM2\n");
+    //printf("Hello from ILM2\n");
 
     for (int i = 0; i < _K; i++)
     {
