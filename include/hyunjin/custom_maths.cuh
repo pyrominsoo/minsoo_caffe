@@ -139,7 +139,7 @@ __global__ void mult_bfloat16_ILM2(
   if(row < _M && col < _N) 
   {
     double sum = 0;
-    //printf("Hello from ILM2\n");
+    printf("Hello from ILM2\n");
 
     for (int i = 0; i < _K; i++)
     {
@@ -149,7 +149,7 @@ __global__ void mult_bfloat16_ILM2(
 			float tempB = 0;
 			float2bfloat(A, tempA);
 			float2bfloat(B, tempB);
-			float mult = fp32_mul_ILM(tempA,tempB,2);
+			float mult = fp32_mul_ILM(tempA,tempB,1);
 			float real_ma_out = 0;
 			float2bfloat(mult,real_ma_out);
 			sum += real_ma_out;
@@ -187,7 +187,7 @@ __global__ void mult_bfloat16_ILM1(
   if(row < _M && col < _N) 
   {
     double sum = 0;
-    //printf("Hello from ILM1\n");
+    printf("Hello from ILM1\n");
     for (int i = 0; i < _K; i++)
     {
 			float A = _op_A[i * _M + row];
