@@ -101,11 +101,14 @@ __global__ void mult_bfloat16(
 			float B = _op_B[_K * col + i];
 			float tempA = 0;
 			float tempB = 0;
-			float2bfloat(A, tempA);
-			float2bfloat(B, tempB);
+			//float2bfloat(A, tempA);
+			//float2bfloat(B, tempB);
+            tempA = A;
+            tempB = B;
 			float mult = tempA * tempB;
-			float real_ma_out = 0;
-			float2bfloat(mult,real_ma_out);
+			//float real_ma_out = 0;
+			float real_ma_out = mult;
+            //float2bfloat(mult,real_ma_out);
 			sum += real_ma_out;
     } // End of for (int i = 0; i < _K; i++)
     //printf("Here \n");
