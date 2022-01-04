@@ -245,7 +245,7 @@ int train() {
     switch (mult_type) {
       case 1: // Float
         batnorm_meanscale = 1.0;
-        batnorm_variscale = 1.0;
+        batnorm_variscale = 1.0;            
         break;
       case 2: // fixed
         batnorm_meanscale = 1.0;
