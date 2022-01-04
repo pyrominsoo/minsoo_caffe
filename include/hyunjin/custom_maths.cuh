@@ -108,7 +108,7 @@ __global__ void mult_bfloat16(
 			float mult = tempA * tempB;
 			//float real_ma_out = 0;
 			float real_ma_out = mult;
-            printf("A: %4.4f, B: %4.4f, P: 4.4f",A,B,real_ma_out);
+            printf("A: %4.4f, B: %4.4f, P: %4.4f\n",A,B,real_ma_out);
             //float2bfloat(mult,real_ma_out);
 			sum += real_ma_out;
     } // End of for (int i = 0; i < _K; i++)
