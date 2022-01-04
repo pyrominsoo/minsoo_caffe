@@ -105,7 +105,7 @@ __global__ void mult_bfloat16(
 			//float2bfloat(B, tempB);
             tempA = A;
             tempB = B;
-			float mult = tempA * temp;
+			float mult = tempA * tempB;
 			//float real_ma_out = 0;
 			float real_ma_out = mult;
             printf("A: %4.4f, B: %4.4f, P: 4.4f",A,B,real_ma_out);
