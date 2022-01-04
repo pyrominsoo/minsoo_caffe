@@ -149,9 +149,9 @@ void caffe_gpu_gemm_approx<float>(const CBLAS_TRANSPOSE TransA,
   switch (mult_type) 
   {
     case 2: // FIXED
-      mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
+     mult_bfloat16<<<blocksPerGrid,threadsPerBlock>>>
         (dop_B, dop_A, C, N, M, K, drum_k,
-        ALLNUMBITS, FRACBITS,  alpha, beta);     
+        ALLNUMBITS, FRACBITS,  alpha, beta);    
       break;
     case 3: // FIXED
       mult_bfloat16_ILM1<<<blocksPerGrid,threadsPerBlock>>>
